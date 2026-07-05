@@ -4,7 +4,9 @@ The proof-of-concept is a meridian package with a small deterministic tool layer
 
 ## Goal
 
-The prototype is successful if Greyford feels like a place with memory: NPCs react to prior events, rumors move through the world, factions respond to the player's actions, quests branch based on choices, and the player's rise begins to leave marks.
+The prototype is successful if the starting region feels like a place with memory: NPCs react to prior events, rumors move through the world, factions respond to the player's actions, techniques gain proficiency through use, and shrine breakthroughs can alter the player's path.
+
+Do not anchor the prototype identity around a generic LLM-generated town name. Use placeholder names in tests if needed, but author the actual starting region deliberately.
 
 ## What to Build
 
@@ -17,7 +19,7 @@ The PoC is a meridian package containing:
 | Validator agent | Checks consistency — presence, knowledge, rules, causality |
 | NPC agents | One per named character, using the character-sim pattern |
 | World state files | The structured directory of prose and data files |
-| Tool definitions | `move_character`, `write_event`, `change_relationship`, `spread_rumor`, `claim_site`, `create_quest_thread` |
+| Tool definitions | `move_character`, `write_event`, `change_relationship`, `spread_rumor`, `claim_site`, `create_quest_thread`, `record_training`, `evolve_technique`, `attempt_breakthrough` |
 | Setup skill | Instructions for configuring local models as an alternative backend |
 
 The build contract for these files and tools lives in [V0 Implementation Spec](implementation-spec.md).
@@ -26,12 +28,14 @@ The build contract for these files and tools lives in [V0 Implementation Spec](i
 
 | Element | First version |
 |---|---|
-| Map | Greyford + 6-8 connected sites |
+| Map | Small authored starting region + 6-8 connected sites |
 | Characters | Player + 5 named agents + lightweight NPCs |
-| Factions | Lordship, Church, Guild, Bandits, Villagers |
-| Story threads | North Mill, rival adventurer, Church suspicion, bandit recruitment |
+| Factions | Local authority, church/shrine institution, guild/company, bandits/raiders, villagers/refugees |
+| Story threads | Site dispute, rival, shrine pressure, bandit recruitment, local legitimacy |
 | World clock | Daily regional tick, hourly local tick, wait/travel triggers |
 | Memory | Event log, area files, FTS + vector index |
+| Technique system | One learned technique, proficiency gain, one evolution opportunity |
+| Shrine system | One breakthrough site with a simple path upgrade |
 
 ## Player Interaction
 
@@ -42,22 +46,25 @@ The player interacts through natural language. Core actions:
 - **talk** — Speak to a present character.
 - **wait** — Advance the clock and trigger background actions.
 - **inspect** — Examine something in detail.
+- **train** — Practice a known technique or study a manual.
+- **evolve** — At mastery, evolve a technique using chosen references.
+- **pray / breakthrough** — Use a shrine, statue, or altar for path-level progression.
 - **take job** — Accept a quest or task.
 
 Example session:
 
-```
-Day 1, Hour 9 — Greyford Market
+```text
+Day 1, Hour 9 — Market Road
 
-Refugees crowd the market stalls. Lord Vael's soldiers are posting new
-road tariffs. At the Guild table, Mara is arguing with a miller whose
-hands are still dusted white with flour.
+Rain has turned the trade road into black mud. Refugees huddle beneath
+patched canvas while a shrine bell rings somewhere beyond the old wall.
+A guild clerk is arguing with a farmer over missing grain wagons.
 
-Exits: north Church Hospital · east East Gate
-       west Adventurers Guild · south Old Wall Slums
-Present: Mara, Tomas, Old Miller Renn
+Exits: north Old Shrine · east Town Gate
+       west Mill Road · south River Crossing
+Present: Guild Clerk, Rival Adventurer, Old Farmer
 
-> talk to the miller
+> inspect the shrine bell
 ```
 
 ## Success Criteria
@@ -66,10 +73,14 @@ Present: Mara, Tomas, Old Miller Renn
 2. Generated scenes only use reachable locations, present characters, or propagated information.
 3. NPCs remember at least three prior player actions in later scenes.
 4. At least one quest thread can resolve in multiple factionally meaningful ways.
-5. At least one rumor spreads from a site back into town.
-6. The player can begin building a party or power base.
-7. Scenario tests can replay the Greyford happy path and rebuild derived state from the canonical event log.
+5. At least one rumor spreads from a site back into the hub.
+6. The player can learn a technique and gain proficiency by using or training it.
+7. At mastery, the player can evolve a technique using a chosen reference and their history.
+8. The player can attempt one shrine breakthrough that changes their base path.
+9. Scenario tests can replay the happy path and rebuild derived state from the canonical event log.
 
 ## After the PoC
 
-If the story loop works, the next step is a visual client. The meridian package stays the same — a game client (Godot, web, or other) connects to the same agents and skills and renders the world visually. The text PoC proves the engine; the client provides the body.
+If the story loop works, the next step is a visual client. The meridian package stays the same — a game client connects to the same agents and skills and renders the world visually.
+
+The current V1 direction is turn-based party combat, closer to Darkest Dungeon than an action RPG: readable positions, stress, wounds, status effects, marks, and named techniques.
