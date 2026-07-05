@@ -1,6 +1,26 @@
 # Growth and Power
 
-Growth supports the story of rising faster than ordinary people in a collapsing world. The player's rise is multi-channel: personal strength, allies, reputation, territory, institutional leverage, and player-made techniques born from lived events.
+Growth supports the story of rising faster than ordinary people in a collapsing world. The player's rise is multi-channel: mana cultivation rank, personal strength, allies, reputation, territory, institutional leverage, and player-made techniques born from lived events.
+
+## Mana Rank (Cultivation)
+
+The core progression axis. Mana rank represents the player's cultivated power — their ability to channel and shape mana through techniques. Rank advances through tiered breakthroughs, not XP accumulation.
+
+### Rank Tiers
+
+Each tier requires accumulated insights (from lived experience, manuals, or player-written reflections) and a breakthrough challenge — a trial, revelation, or crisis that tests whether the player has internalized what they've learned.
+
+Rank names TBD (could be numbered stages, named tiers like Initiate/Adept/Master/Sage, or something world-specific). The mechanical effect: higher rank unlocks stronger technique compositions, increases mana capacity, and opens new primitive combinations during insight validation.
+
+### Insight Sources
+
+| Source | How it works |
+|---|---|
+| Lived experience | Events with narrative weight generate insights automatically (existing pipeline) |
+| Manuals | Discoverable technique scrolls, martial arts texts, meditation guides — studied to gain structured insights |
+| Player-written | Free text reflections combining manual knowledge with lived experience — the player articulates their own understanding |
+
+Manuals are found in the world (looted from enemies, bought from merchants, discovered in ruins, gifted by masters). A manual alone gives partial insight — the player must also have relevant experience to fully internalize it. A swordsmanship manual means more to someone who has fought than to someone who hasn't.
 
 ## Power Types
 
@@ -56,4 +76,4 @@ Techniques are assembled from a vocabulary of mechanical primitives:
 
 Dash, damage, push, pull, shield, bind, mark, reveal, summon, terrain change, morale buff, fear pressure, reputation shift, faction aura, dialogue unlock, oath condition, cooldown, range, cost, tier, escalation risk.
 
-The LLM proposes creative combinations. The tools validate cost, tier, cooldown, balance, and world consistency before a technique becomes real.
+The LLM proposes creative combinations. The tools validate cost, tier, cooldown, balance, and world consistency before a technique becomes real. V0 uses a small point budget so generated techniques are creative in name and origin but bounded in mechanics; see [V0 Implementation Spec](implementation-spec.md).

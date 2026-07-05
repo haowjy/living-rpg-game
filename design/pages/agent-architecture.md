@@ -1,6 +1,6 @@
 # Agent Architecture
 
-The game engine is an LLM agent loop over a structured file system. The LLM reads world state from files, writes narration as free text, and calls tools when state needs to change.
+The game engine is an LLM agent loop over a structured file system. The LLM reads world state from files, writes narration as free text, and calls tools when state needs to change. The LLM does not directly edit canonical world state.
 
 ## Core Loop
 
@@ -30,7 +30,7 @@ The PoC is a meridian package — a set of agents and skills, following the same
 
 ## State Mutations via Tools
 
-State changes happen through tool calls. The LLM proposes a call; the tool validates and executes it.
+State changes happen through tool calls. The LLM proposes a call; the tool validates and executes it. Tools own canonical mutation, derived projections, and index updates.
 
 ```
 move_character(character_id, destination_area)
@@ -42,6 +42,8 @@ create_quest_thread(quest)
 ```
 
 If a tool call references an invalid location, a character who is not present, or a faction that does not exist, the tool rejects it. The LLM retries once on failure, then falls back to a template appropriate to the scene type.
+
+The exact V0 schemas and tool contracts are defined in [V0 Implementation Spec](implementation-spec.md).
 
 ## Platform and Model Policies
 

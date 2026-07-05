@@ -15,7 +15,7 @@ Examples of pressure ready to become story:
 - A rumor reaching the wrong person.
 - A war creating a claimable power vacuum.
 
-Pressure accumulates from events. When enough pressure builds around a cluster of characters, locations, and factions, the story system proposes a scene.
+Pressure accumulates from events. When enough pressure builds around a cluster of characters, locations, and factions, the story system proposes a scene. V0 uses the pressure score in [V0 Implementation Spec](implementation-spec.md) to decide whether a pattern stays flavor, becomes a rumor, becomes a candidate scene, or becomes a quest thread.
 
 ## Story Sifting
 
@@ -23,7 +23,7 @@ The LLM reads the event stream and proposes emerging patterns as story threads. 
 
 Example: repeated public conflict between the player and Tomas becomes a rivalry thread. A spared bandit plus food shortage plus weak lordship control becomes a recruitment or rebellion thread. The LLM notices these patterns because it reads the full event context, not because a rule fires on specific event types.
 
-When a pattern has enough recurrence, stakes, and actors, the story system promotes it into a quest thread (see [Quests & Threads](#quests-threads)).
+When a pattern has enough recurrence, stakes, and actors, the story system promotes it into a quest thread (see [Quests & Threads](quests-threads.md)). In V0, promotion requires a pressure score of at least 6 and at least two plausible future choices.
 
 ## Scene Generation
 
@@ -45,6 +45,8 @@ Scenes are grounded by validation checks:
 | Scope | Is the scene local enough for the current player location? |
 
 These checks are enforced by the tools. If `write_event` receives a reference to a character who is not present, the tool rejects the call.
+
+V0 validation is intentionally concrete: every referenced entity must exist, every NPC reaction must be backed by witnessed events or rumor knowledge, and every scene must use reachable locations or a message carrier.
 
 ## Content Building
 

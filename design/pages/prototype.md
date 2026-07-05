@@ -1,6 +1,6 @@
 # Prototype
 
-The proof-of-concept is a meridian package — a set of agents and skills — that proves persistent, local, escalating story in a small sandbox. After 30-60 minutes of play, the player should be able to tell a specific story that only happened because of their choices.
+The proof-of-concept is a meridian package with a small deterministic tool layer. It proves persistent, local, escalating story in a small sandbox. After 30-60 minutes of play, the player should be able to tell a specific story that only happened because of their choices.
 
 ## Goal
 
@@ -19,6 +19,8 @@ The PoC is a meridian package containing:
 | World state files | The structured directory of prose and data files |
 | Tool definitions | `move_character`, `write_event`, `change_relationship`, `spread_rumor`, `claim_site`, `create_quest_thread` |
 | Setup skill | Instructions for configuring local models as an alternative backend |
+
+The build contract for these files and tools lives in [V0 Implementation Spec](implementation-spec.md).
 
 ## Vertical Slice
 
@@ -66,6 +68,7 @@ Present: Mara, Tomas, Old Miller Renn
 4. At least one quest thread can resolve in multiple factionally meaningful ways.
 5. At least one rumor spreads from a site back into town.
 6. The player can begin building a party or power base.
+7. Scenario tests can replay the Greyford happy path and rebuild derived state from the canonical event log.
 
 ## After the PoC
 

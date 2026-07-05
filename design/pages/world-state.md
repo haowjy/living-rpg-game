@@ -1,6 +1,6 @@
 # World State
 
-World state lives as files in a structured directory. The LLM reads prose and data files directly. An index (FTS + vector) provides search when the agent needs to find relevant context across the world.
+World state lives as files in a structured directory. The LLM reads prose and data files directly. An index (FTS + vector) provides search when the agent needs to find relevant context across the world. Tools are the only writers for canonical state.
 
 ## Directory Structure
 
@@ -44,7 +44,8 @@ world/
     reclaim-north-mill.md
 
   events/
-    log.md               # append-only record of what happened
+    log.jsonl            # canonical append-only event log
+    log.md               # readable projection of what happened
 ```
 
 ## Design Principles
@@ -53,7 +54,9 @@ world/
 
 Files are prose by default. The LLM reads them as context and writes narration in the same format. Structured data (stats, coordinates, relationship values) lives in fenced blocks within markdown files or in small data files where precision matters.
 
-State mutations happen via tool calls, not by the LLM editing files directly. When the `move_character` tool fires, it updates the relevant area files and the character file. When `write_event` fires, it appends to the event log.
+State mutations happen via tool calls, not by the LLM editing files directly. When the `move_character` tool fires, it updates the relevant area files and the character file. When `write_event` fires, it appends to the canonical JSONL event log and rebuilds readable projections.
+
+The implementation-facing schemas are defined in [V0 Implementation Spec](implementation-spec.md).
 
 ## Index Layer
 
@@ -68,7 +71,7 @@ The index is a derived projection of the files. It can be rebuilt from the direc
 
 ## Events as Truth
 
-Everything important that happens becomes an event in the log. Events are how the world remembers and how future story generation stays grounded.
+Everything important that happens becomes an event in the log. Events are how the world remembers and how future story generation stays grounded. `events/log.jsonl` is canonical; `events/log.md`, area recent-event files, and index entries are rebuildable projections.
 
 A typical event entry in `events/log.md`:
 

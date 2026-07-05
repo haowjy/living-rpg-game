@@ -4,7 +4,7 @@ Decisions from the design review and grilling session. These supersede conflicti
 
 ## Setting
 
-Generic fantasy. Not cultivation, not xianxia. The project name will change to reflect this. Familiarity is a strength — don't reinvent genre conventions without reason.
+Xianxia-like medieval fantasy. The world is grounded medieval (kingdoms, guilds, churches, trade routes) but the progression system is cultivation-inspired. Mana ranks, tiered breakthroughs, and manuals exist alongside swords and politics. Think wuxia energy in a western fantasy shell — the setting is familiar, but power growth follows cultivation logic.
 
 ## Architecture
 
@@ -46,15 +46,24 @@ Standard RPG stats: STR, DEX, CON, INT, WIS, CHA, HP, level. Equipment slots, sk
 
 LLM-driven, not rule-based. The sifter reads the event stream and proposes emerging patterns as story threads. The runtime validates that proposed threads reference real events and characters. No rigid pattern-matching rules. Timing is flexible.
 
-## Insight spellcraft
+## Insight spellcraft and cultivation progression
 
-Retained from the original bundle. Events become insights, insights become technique proposals, proposals compile into validated mechanics. This is the core differentiator — "make your own spells from the story you lived." In the standard RPG stat model, techniques slot into the ability list.
+The core differentiator: "make your own spells from the story you lived." Insight sources are twofold:
+
+1. **Lived experience** — events with narrative weight become insights (as before)
+2. **Manuals** — discoverable texts (martial arts manuals, technique scrolls, meditation guides) that the player can study as insight sources
+
+Players can also write their own insights in free text, combining what they learned from manuals with what they experienced in the game.
+
+Insights feed into technique advancement AND mana rank progression. Mana rank is tiered with breakthroughs — accumulate enough insights and pass a challenge/trial to break through to the next tier. Techniques grow stronger as mana rank increases.
+
+This replaces the generic RPG level system. Stats remain (STR, DEX, etc.) but progression is driven by cultivation rank, not XP-based leveling.
 
 ## Dead paths
 
 - **Minecraft mod path:** Killed. Turn-based or real-time-with-LLM-perturbation combat is incompatible with Minecraft's mob system. The game needs its own combat, which means Minecraft's sandbox body is more hindrance than help.
 - **Card deck builder:** Killed. A deck builder is a second game that competes with the story for attention. The story is the documented north star.
-- **Cultivation as identity:** Killed. Cultivation mechanics can exist as optional flavor but are not the pitch or identity.
+- **Cultivation as identity:** Revised. Cultivation is the core progression mechanic (mana ranks, breakthroughs, manuals). The setting is xianxia-like medieval fantasy, not pure xianxia — the world is grounded medieval, but power growth follows cultivation logic.
 
 ## LLM failure handling
 
@@ -66,7 +75,7 @@ The world starts as a functioning medieval society — multiple kingdoms, trade,
 
 ## Version roadmap
 
-- **V0:** Agents + skills on opencode. Narrative DM, no custom code. Proves the agent loop and story systems.
+- **V0:** Agents + skills on opencode with a small deterministic tool layer. Narrative DM, terminal play, canonical file-backed state, validated mutations, and scenario tests. Proves the agent loop and story systems.
 - **V1:** Full 2.5D tile-based game (Godot). Real-time action combat, technique hotbar, procedurally generated tile environments driven by LLM world state. Same agent backend.
 
 ## Art direction (V1)
