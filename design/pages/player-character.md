@@ -1,6 +1,6 @@
 # Player Character
 
-The player character uses standard RPG stats: STR, DEX, CON, INT, WIS, CHA, HP, and level. Equipment slots and a skill list that grows from use round out the mechanical identity. Techniques from the insight spellcraft system slot into the ability list alongside conventional skills.
+The player character uses standard RPG stats: STR, DEX, CON, INT, WIS, CHA, HP, and level. Equipment slots, use-based skills, learned techniques, proficiency, relationships, reputation, and shrine breakthroughs round out the mechanical identity.
 
 ## Stats
 
@@ -19,11 +19,15 @@ HP derives from CON and level. Level increases from accumulated experience acros
 
 Skills grow from use. A player who repeatedly picks locks improves at lockpicking. A player who negotiates with faction leaders improves at persuasion. The skill list is open-ended — new skills appear when the player attempts new kinds of actions.
 
-Skills have proficiency levels (untrained, novice, competent, expert, master) that affect the narrative DM's interpretation of attempts.
+Skills have proficiency levels: untrained, novice, competent, expert, master.
 
 ## Techniques
 
-Techniques come from the insight spellcraft pipeline (see [Growth & Power](#growth-power)). They slot into the ability list alongside conventional skills. A technique like "Ash Wolf Step" sits next to "Sword Fighting" and "Lockpicking" — the player uses all of them the same way, by describing what they want to do.
+Techniques are learned forms with proficiency.
+
+The player can learn techniques from manuals, teachers, enemies, relics, shrines, or experiments. Proficiency rises through use, training, drills, and study. At higher proficiency, the player can evolve a technique by bringing references — another technique, a manual passage, a strange book, a shrine, a memory, or a line they write themselves.
+
+A technique is not automatically created by a meaningful event. Events are context the system can read when the player chooses to evolve a technique.
 
 ## Equipment
 
@@ -41,23 +45,23 @@ Equipment affects stats and opens or closes options. Heavy armor increases effec
 
 ## Conflict Resolution
 
-The PoC uses a narrative DM — the player describes actions in free text, the LLM interprets and narrates outcomes based on stats, skills, and situation.
+The PoC uses narrative turns. The player describes actions in free text, and the system interprets outcomes based on stats, skills, party state, position, technique proficiency, enemy state, and situation.
 
-V1 uses real-time action combat. The player controls movement and attacks directly (WASD + mouse on PC, joystick on controller). Techniques from insight spellcraft slot into a hotbar (4 slots, mapped to number keys or face buttons) and are usable in real-time — dashes, strikes, area effects, defensive moves.
+V1 should use visual turn-based party combat. The player chooses techniques, targets, positions, items, retreats, and party orders. Combat can track turn order, party ranks, stress, wounds, marks, status effects, cooldowns, and legal target rules.
 
-The deterministic game engine handles base combat: hit detection, damage calculation, enemy AI behavior trees. The LLM runs in the background and perturbs the fight — an enemy shouts a taunt referencing your history, reinforcements arrive because a lookout escaped, the environment shifts (a bridge collapses, fire spreads), an enemy breaks and flees because they recognize you. The player feels a living fight, not a scripted encounter.
+The deterministic combat layer handles rules: hit checks, damage, status, turn order, cooldowns, legal targets, and proficiency gain. The LLM runs around that layer: enemy barks, morale shifts, history references, contextual complications, and post-combat consequences.
 
 | Layer | Handles | Example |
 |---|---|---|
-| Game engine | Movement, collision, damage, enemy base AI | Bandit swings sword, player dodges, damage applies |
-| LLM perturbation | Dialogue, reinforcements, environment, morale | Bandit yells "that's the Mill-Savior!" — two others flee |
-| Technique system | Player abilities from insight spellcraft | "Ash Wolf Step" dash leaves afterimage, flanks enemy |
+| Combat engine | Turns, position, damage, status, legal targets | A front-rank bandit marks the lead companion |
+| LLM meaning layer | Dialogue, morale, environment, history references | A frightened enemy recognizes the player from a rumor |
+| Technique system | Learned forms, proficiency, evolution, validation | A mastered step technique evolves into a smoke-feint |
 
 ## Character File
 
 The player character's state lives in `world/characters/player.md`:
 
-```
+```markdown
 # Player Character
 
 **Level:** 2
@@ -72,7 +76,11 @@ STR 12 | DEX 14 | CON 11 | INT 10 | WIS 13 | CHA 15
 - Survival (novice)
 
 ## Techniques
-- Ash Wolf Step — Dash + afterimage + flanking bonus
+- Wolf Step — competent; evasive footwork from a hunter's manual
+- Fire Palm — novice; close-range fire strike
+
+## Shrine Path
+- First Ember — fire affinity, minor burn resistance
 
 ## Equipment
 - Rusted longsword (main hand)
