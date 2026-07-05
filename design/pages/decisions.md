@@ -1,93 +1,114 @@
 # Session Decisions
 
-Decisions from the design review and grilling session. These supersede conflicting statements in earlier bundle pages.
+Decisions from the design review. These supersede conflicting statements in earlier bundle pages.
 
 ## Setting
 
-Xianxia-like medieval fantasy. The world is grounded medieval (kingdoms, guilds, churches, trade routes) but the progression system is cultivation-inspired. Mana ranks, tiered breakthroughs, and manuals exist alongside swords and politics. Think wuxia energy in a western fantasy shell — the setting is familiar, but power growth follows cultivation logic.
+Medieval fantasy with strange power progression. The world is grounded medieval — kingdoms, guilds, churches, trade routes, bandits, ruins, shrines — but power can become mythic and personal over time.
+
+Do not over-center cultivation as the identity of the game. Manuals, training, breakthroughs, and shrine paths can borrow cultivation-like structure, but the player-facing frame is technique mastery and shrine breakthroughs.
 
 ## Architecture
 
 The game engine is an LLM agent loop over a structured file system.
 
-The LLM reads world state from files, writes narration as free text, and calls tools when state needs to change. There is no rigid multi-module pipeline. The architecture page's ten named modules (MapEngine, LocationTracker, StorySifter, StoryDirector, Narrator, Validator, ContentCompiler, etc.) are replaced by: files, an index, tools, and a loop.
+The LLM reads world state from files, writes narration as free text, and calls tools when state needs to change. The architecture is: files, an index, tools, and a loop.
 
 The LLM's primary output is prose, not JSON. Structured output is only used for state mutations via tool calls. JSON mode / constrained decoding handles format validity when structured output is needed.
 
 ## PoC form factor
 
-The PoC is a meridian package — a set of agents and skills, not a custom Python application. It targets multiple platforms (opencode, Claude, etc.) via model policies. The default play experience runs on open platforms.
+The PoC is a meridian package — a set of agents and skills, not a custom Python application. It targets multiple platforms via model policies. The default play experience runs on open platforms.
 
 Agents and skills map from the creative-writing-skills pattern:
 
 | Creative writing | Game engine |
 |---|---|
-| Muse (session lead, stance switching) | Game director (loop, observe, dispatch) |
-| Writer (prose from briefs) | Narrator (prose from world state) |
-| Critic (adversarial reading) | Validator (consistency checking) |
-| Character-sim (in-character conversation) | NPC agents (interactive characters) |
-| KB (durable story memory) | World state (characters, factions, locations) |
-| Story memory (fact extraction) | Event log (what happened) |
+| Muse | Game director |
+| Writer | Narrator |
+| Critic | Validator |
+| Character-sim | NPC agents |
+| KB | World state |
+| Story memory | Event log |
 | Vocab / shared-dao | World lore, canonical terms |
-
-A setup skill provides instructions for configuring local models (Ollama / llama.cpp) as an alternative backend. The same agents and skills work regardless of backend.
 
 ## Player character
 
-Standard RPG stats: STR, DEX, CON, INT, WIS, CHA, HP, level. Equipment slots, skill list that grows from use. Techniques from insights slot into the ability list alongside conventional skills. Don't try to be inventive with the stat model — familiarity is a strength.
+Use familiar RPG stats: STR, DEX, CON, INT, WIS, CHA, HP, and level. Equipment slots and use-based skills are fine. Familiarity is a strength.
 
-## Conflict resolution
+Techniques are learned forms with proficiency. The player can later evolve mastered techniques using references and history.
 
-**PoC (V0):** Narrative DM. The player describes what they do in free text. The LLM interprets and narrates the outcome.
+## Combat direction
 
-**V1:** Real-time action combat. The deterministic game engine handles movement, collision, damage, and enemy AI behavior trees. Techniques from insight spellcraft slot into a 4-slot hotbar (number keys / face buttons) usable in real-time. The LLM perturbs fights in the background — enemy dialogue, reinforcements, environmental shifts, morale breaks. The player controls the action; the LLM makes it feel alive. Reference: Echoes of Mystralia for spell-crafting action RPG feel.
+**V0:** Narrative turn resolution. The player describes what they do in free text. The LLM interprets and narrates the outcome, while tools validate state changes.
+
+**V1:** Turn-based party combat, closer to Darkest Dungeon than an action RPG. Use positions, turn order, stress, injury, marks, status effects, target rules, named techniques, retreats, and party state.
+
+The deterministic combat layer handles turns, damage, legal targets, status effects, proficiency gain, and cooldowns. The LLM handles barks, contextual complications, morale, enemy recognition, post-combat consequences, and technique evolution proposals.
+
+Real-time action combat is no longer the default target.
 
 ## Story sifting
 
-LLM-driven, not rule-based. The sifter reads the event stream and proposes emerging patterns as story threads. The runtime validates that proposed threads reference real events and characters. No rigid pattern-matching rules. Timing is flexible.
+LLM-driven, not rigidly rule-based. The sifter reads the event stream and proposes emerging patterns as story threads. The runtime validates that proposed threads reference real events and characters. Timing is flexible.
 
-## Insight spellcraft and cultivation progression
+## Technique mastery
 
-The core differentiator: "make your own spells from the story you lived." Insight sources are twofold:
+The core differentiator is not automatic event-to-spell insight generation.
 
-1. **Lived experience** — events with narrative weight become insights (as before)
-2. **Manuals** — discoverable texts (martial arts manuals, technique scrolls, meditation guides) that the player can study as insight sources
+The actual model:
 
-Players can also write their own insights in free text, combining what they learned from manuals with what they experienced in the game.
+1. **Learn** — acquire techniques from manuals, teachers, enemies, relics, shrines, or experiments.
+2. **Practice** — proficiency rises through use, drills, study, and training.
+3. **Master** — high proficiency unlocks the ability to alter the form.
+4. **Evolve** — the player chooses references: another technique, manual passage, strange book, shrine, memory, or written idea.
+5. **Validate** — the LLM proposes evolved forms; tools compile the chosen result into legal mechanics.
 
-Insights feed into technique advancement AND mana rank progression. Mana rank is tiered with breakthroughs — accumulate enough insights and pass a challenge/trial to break through to the next tier. Techniques grow stronger as mana rank increases.
+Events matter because they are context read during evolution, not because they automatically generate insight rewards.
 
-This replaces the generic RPG level system. Stats remain (STR, DEX, etc.) but progression is driven by cultivation rank, not XP-based leveling.
+## Shrine breakthroughs
+
+Shrines, statues, and altars are for path-level changes. A breakthrough can affect base level, element, passive bonuses, vows, curses, technique budgets, and the ceiling for how strange later evolutions can become.
+
+This should lean more into prayer / shrine interaction than generic cultivation terminology.
 
 ## Dead paths
 
-- **Minecraft mod path:** Killed. Turn-based or real-time-with-LLM-perturbation combat is incompatible with Minecraft's mob system. The game needs its own combat, which means Minecraft's sandbox body is more hindrance than help.
-- **Card deck builder:** Killed. A deck builder is a second game that competes with the story for attention. The story is the documented north star.
-- **Cultivation as identity:** Revised. Cultivation is the core progression mechanic (mana ranks, breakthroughs, manuals). The setting is xianxia-like medieval fantasy, not pure xianxia — the world is grounded medieval, but power growth follows cultivation logic.
+- **Minecraft mod path:** Killed. Minecraft remains a useful sandbox reference, not the implementation target.
+- **Card deck builder:** Killed. A deck builder is a second game that competes with the story for attention.
+- **Real-time action RPG as default:** Replaced by turn-based party combat as the more plausible visual target.
+- **Cultivation as identity:** Revised. Keep manuals, breakthroughs, and rank-like progression where useful, but do not pitch the game as pure cultivation.
+- **Greyford as public anchor:** Rejected. The first region needs authored identity; do not anchor the site on generic LLM-generated names.
+- **Automatic insight rewards:** Rejected. Events are context; training and evolution are player-driven.
 
 ## LLM failure handling
 
-JSON validity is handled by constrained decoding (JSON mode). Semantic failures (invalid references, impossible actions) are caught by tool-level validation — if `move_character` requires a valid adjacent location, the tool rejects the call. Retry once on failure, then graceful degradation (template fallback appropriate to scene type).
+JSON validity is handled by constrained decoding when structured output is needed. Semantic failures are caught by tool-level validation. Retry once on failure, then graceful degradation with a template appropriate to the scene type.
 
 ## World arc
 
-The world starts as a functioning medieval society — multiple kingdoms, trade, guilds, churches. Political tensions exist but things work. The chaos escalates over time as small wars break out and destabilize the region. Behind the escalation is the Demon King — a human-made existential threat, more plague than dark lord, that grows in power alongside the player. The Demon King's origin is a late-game reveal that recontextualizes the early game.
+The world starts as a functioning medieval society — multiple kingdoms, trade, guilds, churches. Political tensions exist but things work. Chaos escalates over time as small wars break out and destabilize the region.
+
+Behind the escalation is the Demon King: a human-made existential threat, more plague than dark lord, that grows in power alongside the player. The Demon King's origin is a late-game reveal that recontextualizes the early game.
 
 ## Version roadmap
 
-- **V0:** Agents + skills on opencode with a small deterministic tool layer. Narrative DM, terminal play, canonical file-backed state, validated mutations, and scenario tests. Proves the agent loop and story systems.
-- **V1:** Full 2.5D tile-based game (Godot). Real-time action combat, technique hotbar, procedurally generated tile environments driven by LLM world state. Same agent backend.
+- **V0:** Agents + skills on open agent runtimes with a small deterministic tool layer. Narrative turns, terminal play, canonical file-backed state, validated mutations, technique proficiency, evolution proposals, shrine breakthroughs, and scenario tests.
+- **V1:** Visual 2.5D turn-based RPG. Tile exploration, party combat, technique UI, shrine UI, procedurally generated tile environments driven by world state. Same agent backend.
 
-## Art direction (V1)
+## Art direction
 
-Tile-based procedural rendering, three-quarter perspective, anime-inspired pixel art, 32x32 tiles. Reference: CrossCode, Eastward, Echoes of Mystralia. Distant terrain (mountains, sky) is parallax-scrolling painted background, not tiles.
+Tile-based procedural exploration, three-quarter perspective, anime-inspired pixel art, 32x32 tiles. Distant terrain is parallax-scrolling painted background, not tiles.
 
-## World generation (V1)
+Combat presentation can use side-view or staged party layouts like Darkest Dungeon: readable character poses, positions, status icons, and technique effects over twitch input.
 
-Chunk-based, Minecraft-style. A world seed generates a master map (biomes, elevation, roads/rivers, pinned locations). Chunks (32x32 or 64x64 tiles) generate on approach and lock permanently. Chunks are composed from hand-designed prefab templates (50-100 authored by an artist), not built tile-by-tile from noise. Prefabs solve elevation — a "hill with watchtower" prefab already knows how to use cliff-face tiles, plateaus, and paths. After a chunk locks, the LLM writes the semantic layer (who's here, what happened, what pressure exists). The tiles are set by the generator; the meaning is set by the LLM.
+## World generation
+
+Chunk-based, Minecraft-style. A world seed generates a master map: biomes, elevation, roads/rivers, pinned locations. Chunks generate on approach and lock permanently. Chunks are composed from hand-designed prefab templates, not built tile-by-tile from noise. After a chunk locks, the LLM writes the semantic layer: who's here, what happened, what pressure exists. The tiles are set by the generator; the meaning is set by the LLM.
 
 ## Open questions
 
-- **Rumor propagation:** No explicit mechanism designed. May emerge naturally from the agent loop.
-- **Economy / resources:** Undefined. Will design when the agent loop is running and the gap becomes felt.
-- **Save / load:** With file-system state, this may just be "copy the folder." TBD.
+- **Rumor propagation:** Basic explicit tool exists, but richer propagation can evolve later.
+- **Economy / resources:** Undefined. Design when the agent loop is running and the gap becomes felt.
+- **Save / load:** With file-system state, this may just be copying the folder. TBD.
+- **Combat layout:** Decide whether V1 combat uses side-view ranks, grid lanes, or a hybrid staged layout.
