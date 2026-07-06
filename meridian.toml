@@ -80,6 +80,10 @@
 # command = "echo spawn-hook"
 # timeout_secs = 30
 
+[[hooks]]
+builtin = "git-autosync"
+remote = "git@github.com:haowjy/docs.git"
+
 # -- Work behavior -----------------------------------------------------------
 # [work]
 # default_worktree = false
@@ -95,15 +99,30 @@
 # path = ".meridian/work"
 # archive = ".meridian/archive/work"
 
+[context.work]
+source = "git"
+remote = "git@github.com:haowjy/docs.git"
+path = "living-rpg/work"
+archive = "living-rpg/archive/work"
+
+[context.kb]
+source = "git"
+remote = "git@github.com:haowjy/docs.git"
+path = "living-rpg/kb"
+
 # -- Workspace root examples -------------------------------------------------
 # Named workspace entries live in meridian.toml / meridian.local.toml.
 
 # [workspace.docs]
 # path = "./docs"
 
+[workspace.sibling-repos]
+path = ".."
+
+
 # -- Environment variables passed to spawned harnesses -----------------------
 # Flat key-value string map. Applied to every spawn from this project.
 # Keys from meridian.local.toml override meridian.toml; project overrides user.
 
-# [env]
-# OPENCODE_ENABLE_EXA = "1"
+[env]
+OPENCODE_ENABLE_EXA = "1"
