@@ -10,3 +10,11 @@ venv/
 # Runtime world state (generated, not committed)
 world-state/chunks/
 world-state/runtime/
+
+.claude/
+.opencode/
+.codex/
+.pi/
+.cursor/
+.mars/
+
