@@ -2,6 +2,25 @@
 
 Decisions from the design review. These supersede conflicting statements in earlier bundle pages.
 
+## 2026-07-10 — Standalone demo first; LLM engine design-only in parallel
+
+The near-term product is a **standalone demo** of the deterministic game:
+30–60 minutes of play, fun without any LLM. Audience: the developer — this
+is proof of direction, not a marketing artifact.
+
+- **Feel and art consistency are gates, not polish.** The first slice
+  playtest verdict was "works, but looks and feels bad." Movement feel,
+  combat readability, and a consistent art direction are required for the
+  demo to count as proof.
+- **Art direction is chosen from exploration** (2–3 directions mocked
+  against real gameplay), not defaulted.
+- **The LLM engine proceeds as design work only, in parallel.** No runtime
+  until the demo proves the game stands alone. The design deliverables are
+  the LLM-engine architecture and, critically, the **interface contracts
+  both sides need** (commands, events, views), so demo-era sim work does
+  not paint the LLM engine into a corner. `implementation-spec.md` (V0) is
+  the starting blueprint, revised against the now-real Godot sim.
+
 ## 2026-07-10 — Prototype combat direction (supersedes "Combat direction" below)
 
 Decided while building the first deterministic Godot slice:
