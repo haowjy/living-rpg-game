@@ -18,6 +18,8 @@ var queue: Array[Combatant] = []
 var turn_index: int = 0
 var round_number: int = 1
 var outcome: Outcome = Outcome.NONE
+## Combatant ids whose holder-only first-strike passive has fired this combat.
+var first_strike_landed: Dictionary = {}
 ## True after begin_turn() when the current combatant's turn was consumed
 ## automatically (broken stun, burn death) — the driver should not act.
 var turn_consumed: bool = false
@@ -29,6 +31,7 @@ func _init(p_db: ContentDB, p_rng: RngService, p_log: EventLog,
 	rng = p_rng
 	event_log = p_log
 	encounter = p_encounter
+	first_strike_landed.clear()
 	for actor in p_party:
 		if actor.is_alive():
 			party.append(Combatant.from_actor(actor))
@@ -182,6 +185,16 @@ func _strike(attacker: Combatant, target: Combatant, power: int,
 	events.append(_log("damage_dealt",
 			"%s %s %s for %d." % [attacker.display_name, verb, target.display_name, dealt],
 			{"attacker_id": attacker.id, "target_id": target.id, "amount": dealt}))
+	var bonded_spirit := _bonded_spirit_for(attacker)
+	if bonded_spirit != null and bonded_spirit.passive_kind == "first_hit_burn" \
+			and not first_strike_landed.has(attacker.id):
+		first_strike_landed[attacker.id] = true
+		if target.is_alive():
+			target.add_status("burn", bonded_spirit.passive_amount)
+			events.append(_log("status_applied",
+					"%s gains %d burn." % [target.display_name, bonded_spirit.passive_amount],
+					{"target_id": target.id, "status": "burn",
+						"stacks": bonded_spirit.passive_amount}))
 	if applies_status != "" and status_stacks > 0 and target.is_alive():
 		target.add_status(applies_status, status_stacks)
 		events.append(_log("status_applied",

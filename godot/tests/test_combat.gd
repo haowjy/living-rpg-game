@@ -98,6 +98,36 @@ func run(t: TestHarness) -> void:
 	t.ok(invoke_sprout.spirit.contract_state == SpiritState.ContractState.RESTING,
 			"sprout rests after invoking")
 
+	t.context("ember fox spirit")
+	var fox_player := ActorState.new("player", "<player>", 20, 8, 9, 3)
+	var fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var fox_party: Array[ActorState] = [fox_player, fox_actor]
+	var fox := CombatState.new(stance_db, RngService.new(11), EventLog.new(),
+			stance_db.encounter("enc_road"), fox_party)
+	fox._strike(fox.party[0], fox.enemies[0], fox.party[0].attack,  "", 0, "attacks")
+	t.eq(fox.enemies[0].status("burn"), 1, "ember fox burns on its holder's first strike")
+	fox._strike(fox.party[0], fox.enemies[0], fox.party[0].attack,  "", 0, "attacks")
+	t.eq(fox.enemies[0].status("burn"), 1, "ember fox does not burn on the second strike")
+
+	var fresh_fox_player := ActorState.new("player", "<player>", 20, 8, 9, 3)
+	var fresh_fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var fresh_fox_party: Array[ActorState] = [fresh_fox_player, fresh_fox_actor]
+	var fresh_fox := CombatState.new(stance_db, RngService.new(12), EventLog.new(),
+			stance_db.encounter("enc_road"), fresh_fox_party)
+	fresh_fox._strike(fresh_fox.party[0], fresh_fox.enemies[0],
+			fresh_fox.party[0].attack, "", 0, "attacks")
+	t.eq(fresh_fox.enemies[0].status("burn"), 1,
+			"ember fox first-strike passive resets in a fresh combat")
+
+	var invoke_fox_player := ActorState.new("player", "<player>", 20, 8, 6, 3)
+	var invoke_fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var invoke_fox_party: Array[ActorState] = [invoke_fox_player, invoke_fox_actor]
+	var fox_invoke := CombatState.new(stance_db, RngService.new(13), EventLog.new(),
+			stance_db.encounter("enc_road"), invoke_fox_party)
+	fox_invoke.perform({"kind": "invoke"})
+	for enemy in fox_invoke.enemies:
+		t.eq(enemy.status("burn"), 1, "ember fox invoke burns %s" % enemy.id)
+
 	t.context("turn order")
 	var gs := _full_party_state(11)
 	var combat := CombatState.new(gs.db, gs.rng, gs.event_log, gs.db.encounter("enc_road"), gs.party)
