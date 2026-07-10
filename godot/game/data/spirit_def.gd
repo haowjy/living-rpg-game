@@ -18,11 +18,15 @@ extends Resource
 @export var attack: int = 2
 
 @export_group("Bonded passive (applies to contract holder)")
+## Selects the spirit's small bonded-passive hook.
+@export var passive_kind: String = "stat_buff"
 ## Stat the passive modifies: "attack" or "speed".
 @export var passive_stat: String = "attack"
 @export var passive_amount: int = 1
 
 @export_group("Invoke move")
+## Selects the spirit's invoke behavior.
+@export var invoke_kind: String = "enemy_hit"
 @export var invoke_name: String = ""
 @export var invoke_power: int = 6
 ## Status applied to all enemies on Invoke, "" for none.

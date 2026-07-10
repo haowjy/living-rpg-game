@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SpiritDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/spirit_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "spirit_c"
+display_name = "<ember fox>"
+element = "ember"
+max_hp = 10
+max_qi = 6
+speed = 8
+attack = 3
+passive_kind = "first_hit_burn"
+passive_stat = "attack"
+passive_amount = 1
+invoke_kind = "enemy_hit"
+invoke_name = "<ember fox invoke>"
+invoke_power = 3
+invoke_status = "burn"
+invoke_status_stacks = 1
+invoke_hits_all = true
+rest_rounds = 2

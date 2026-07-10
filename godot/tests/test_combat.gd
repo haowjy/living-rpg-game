@@ -45,6 +45,89 @@ func _play_out(combat: CombatState, max_steps: int = 200) -> void:
 
 
 func run(t: TestHarness) -> void:
+	t.context("self-target technique")
+	var stance_db := ContentDB.new()
+	var stance_gs := GameState.new(stance_db, 7)
+	stance_gs.start_new_run("hub_a")
+	stance_gs.learn_technique("player", "technique_c")
+	var stance := CombatState.new(stance_db, stance_gs.rng, stance_gs.event_log,
+			stance_db.encounter("enc_road"), stance_gs.party)
+	var stance_target_hp := stance.enemies[0].hp()
+	var stance_events := stance.perform(
+			{"kind": "technique", "technique_id": "technique_c"})
+	t.eq(stance.party[0].status("guard"), 2, "guard stance applies guard to its user")
+	t.eq(stance.enemies[0].hp(), stance_target_hp, "guard stance deals no enemy damage")
+	var stance_amount := -1
+	for event in stance_events:
+		if String(event["type"]) == "technique_used":
+			stance_amount = int(event["data"]["amount"])
+	t.eq(stance_amount, 0, "guard stance records zero damage")
+	var step_gs := GameState.new(stance_db, 8)
+	step_gs.start_new_run("hub_a")
+	step_gs.learn_technique("player", "technique_d")
+	var step := CombatState.new(stance_db, step_gs.rng, step_gs.event_log,
+			stance_db.encounter("enc_road"), step_gs.party)
+	var step_target_hp := step.enemies[0].hp()
+	step.perform({"kind": "technique", "technique_id": "technique_d"})
+	t.eq(step.party[0].status("guard"), 2, "evasive step applies guard to its user")
+	t.eq(step.enemies[0].hp(), step_target_hp, "evasive step deals no enemy damage")
+
+	t.context("sprout spirit")
+	var sprout_player := ActorState.new("player", "<player>", 20, 8, 8, 3)
+	var sprout_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_b"))
+	var sprout_party: Array[ActorState] = [sprout_player, sprout_actor]
+	var sprout_log := EventLog.new()
+	var sprout := CombatState.new(stance_db, RngService.new(9), sprout_log,
+			stance_db.encounter("enc_road"), sprout_party)
+	sprout.perform({"kind": "guard"})
+	t.eq(sprout.party[0].status("guard"), 3,
+			"sprout adds one stack to its holder's Guard action")
+
+	var invoke_player := ActorState.new("player", "<player>", 20, 8, 6, 3)
+	var invoke_sprout := ActorState.from_spirit_def(stance_db.spirit("spirit_b"))
+	var invoke_party: Array[ActorState] = [invoke_player, invoke_sprout]
+	var invoke_log := EventLog.new()
+	var sprout_invoke := CombatState.new(stance_db, RngService.new(10), invoke_log,
+			stance_db.encounter("enc_road"), invoke_party)
+	for member in sprout_invoke.party:
+		member.add_status("burn", 2)
+	sprout_invoke.perform({"kind": "invoke"})
+	for member in sprout_invoke.party:
+		t.eq(member.status("guard"), 1, "sprout invoke guards %s" % member.id)
+		t.eq(member.status("burn"), 0, "sprout invoke cleanses %s burn" % member.id)
+	t.ok(invoke_sprout.spirit.contract_state == SpiritState.ContractState.RESTING,
+			"sprout rests after invoking")
+
+	t.context("ember fox spirit")
+	var fox_player := ActorState.new("player", "<player>", 20, 8, 9, 3)
+	var fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var fox_party: Array[ActorState] = [fox_player, fox_actor]
+	var fox := CombatState.new(stance_db, RngService.new(11), EventLog.new(),
+			stance_db.encounter("enc_road"), fox_party)
+	fox._strike(fox.party[0], fox.enemies[0], fox.party[0].attack,  "", 0, "attacks")
+	t.eq(fox.enemies[0].status("burn"), 1, "ember fox burns on its holder's first strike")
+	fox._strike(fox.party[0], fox.enemies[0], fox.party[0].attack,  "", 0, "attacks")
+	t.eq(fox.enemies[0].status("burn"), 1, "ember fox does not burn on the second strike")
+
+	var fresh_fox_player := ActorState.new("player", "<player>", 20, 8, 9, 3)
+	var fresh_fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var fresh_fox_party: Array[ActorState] = [fresh_fox_player, fresh_fox_actor]
+	var fresh_fox := CombatState.new(stance_db, RngService.new(12), EventLog.new(),
+			stance_db.encounter("enc_road"), fresh_fox_party)
+	fresh_fox._strike(fresh_fox.party[0], fresh_fox.enemies[0],
+			fresh_fox.party[0].attack, "", 0, "attacks")
+	t.eq(fresh_fox.enemies[0].status("burn"), 1,
+			"ember fox first-strike passive resets in a fresh combat")
+
+	var invoke_fox_player := ActorState.new("player", "<player>", 20, 8, 6, 3)
+	var invoke_fox_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_c"))
+	var invoke_fox_party: Array[ActorState] = [invoke_fox_player, invoke_fox_actor]
+	var fox_invoke := CombatState.new(stance_db, RngService.new(13), EventLog.new(),
+			stance_db.encounter("enc_road"), invoke_fox_party)
+	fox_invoke.perform({"kind": "invoke"})
+	for enemy in fox_invoke.enemies:
+		t.eq(enemy.status("burn"), 1, "ember fox invoke burns %s" % enemy.id)
+
 	t.context("turn order")
 	var gs := _full_party_state(11)
 	var combat := CombatState.new(gs.db, gs.rng, gs.event_log, gs.db.encounter("enc_road"), gs.party)
