@@ -59,15 +59,13 @@ The default should be `code`, not `full`.
 
 The project vendors the Godot AI addon in `godot/addons/godot_ai` and enables it in `godot/project.godot`.
 
-Claude Code project config is tracked in `.mcp.json`.
+All three clients have tracked project-scoped config:
 
-Codex project-local config is tracked in `.codex/godot-ai.config.toml`. Codex does not currently expose the same project-scoped MCP config writer as Claude Code, so use the repo launcher when you want Codex with this MCP enabled:
+- Claude Code: `.mcp.json`. Project-scoped servers stay "pending approval" until the workspace is trusted; approve on first use.
+- Codex: `.codex/config.toml`, auto-loaded once the project is trusted. If you decline trust, `scripts/codex-godot` injects the same server via `-c` flags.
+- opencode: `opencode.json` (`mcp.godot-ai`, `type: "remote"`).
 
-```bash
-scripts/codex-godot
-```
-
-Both point to:
+All point to:
 
 ```text
 http://127.0.0.1:8000/mcp

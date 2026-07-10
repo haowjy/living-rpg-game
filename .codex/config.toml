@@ -1,0 +1,13 @@
+# Project-scoped Codex config for the Godot AI MCP bridge.
+#
+# Codex auto-loads .codex/config.toml when the project is trusted
+# (approve the trust prompt on first launch in this repo). If the project
+# is untrusted, `scripts/codex-godot` injects the same server via -c flags.
+#
+# The endpoint only exists while the Godot editor has godot/ open with the
+# Godot AI plugin enabled. See docs/ai-dev-workflow.md, "Godot MCP".
+
+[mcp_servers."godot-ai"]
+url = "http://127.0.0.1:8000/mcp"
+enabled = true
+
