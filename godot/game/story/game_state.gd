@@ -95,9 +95,9 @@ func rest() -> Dictionary:
 
 
 func buy(item_id: String) -> Dictionary:
-	var item_def := db.item(item_id)
 	if not _merchant_sells_here(item_id):
-		return _fail("No merchant here sells %s." % item_def.display_name)
+		return _fail("No merchant here sells item id: %s." % item_id)
+	var item_def := db.item(item_id)
 	if gold < item_def.price:
 		return _fail("Not enough gold to buy %s." % item_def.display_name)
 	gold -= item_def.price

@@ -92,6 +92,16 @@ func run(t: TestHarness) -> void:
 	t.eq(remote.event_log.entries[-1]["type"], "command_rejected",
 			"remote purchase rejection is logged")
 
+	var unknown_gold := shopper.gold
+	var unknown_inventory := shopper.inventory.duplicate()
+	var unknown_item := shopper.buy("item_unknown")
+	t.ok(not unknown_item["ok"] and not String(unknown_item["error"]).is_empty(),
+			"buying an unknown item returns a command rejection")
+	t.eq(shopper.gold, unknown_gold, "unknown purchase does not deduct gold")
+	t.eq(shopper.inventory, unknown_inventory, "unknown purchase does not alter inventory")
+	t.eq(shopper.event_log.entries[-1]["type"], "command_rejected",
+			"unknown purchase rejection is logged")
+
 	t.context("sell")
 	shopper.inventory["item_salve"] = 2
 	shopper.gold = 0
