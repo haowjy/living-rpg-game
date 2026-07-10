@@ -62,6 +62,15 @@ func run(t: TestHarness) -> void:
 		if String(event["type"]) == "technique_used":
 			stance_amount = int(event["data"]["amount"])
 	t.eq(stance_amount, 0, "guard stance records zero damage")
+	var step_gs := GameState.new(stance_db, 8)
+	step_gs.start_new_run("hub_a")
+	step_gs.learn_technique("player", "technique_d")
+	var step := CombatState.new(stance_db, step_gs.rng, step_gs.event_log,
+			stance_db.encounter("enc_road"), step_gs.party)
+	var step_target_hp := step.enemies[0].hp()
+	step.perform({"kind": "technique", "technique_id": "technique_d"})
+	t.eq(step.party[0].status("guard"), 2, "evasive step applies guard to its user")
+	t.eq(step.enemies[0].hp(), step_target_hp, "evasive step deals no enemy damage")
 
 	t.context("turn order")
 	var gs := _full_party_state(11)
