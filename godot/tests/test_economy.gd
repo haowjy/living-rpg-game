@@ -25,6 +25,14 @@ func run(t: TestHarness) -> void:
 	t.eq(traveler.time_of_day, 1, "travel between outdoor areas advances time")
 	t.eq(traveler.event_log.entries[-1]["type"], "time_advanced",
 			"outdoor travel logs its time advancement")
+	var entered := traveler.move_to_area("hub_a")
+	t.ok(entered["ok"], "returning to the hub succeeds")
+	var before_interior := traveler.time_of_day
+	entered = traveler.move_to_area("hub_a_interior")
+	t.ok(entered["ok"], "entering the shop interior succeeds")
+	t.eq(traveler.time_of_day, before_interior, "entering an interior does not advance time")
+	t.eq(traveler.event_log.entries[-1]["type"], "traveled",
+			"interior travel does not append a time event")
 
 	t.context("rest")
 	var resting := GameState.new(db, 42)
@@ -32,10 +40,14 @@ func run(t: TestHarness) -> void:
 	resting.time_of_day = 2
 	resting.player().hp = 3
 	resting.player().qi = 1
+	resting.party[1].hp = 2
+	resting.party[1].qi = 0
 	var rested := resting.rest()
 	t.ok(rested["ok"], "resting at the hub succeeds")
 	t.eq(resting.player().hp, resting.player().max_hp, "rest restores HP")
 	t.eq(resting.player().qi, resting.player().max_qi, "rest restores qi")
+	t.eq(resting.party[1].hp, resting.party[1].max_hp, "rest restores every actor's HP")
+	t.eq(resting.party[1].qi, resting.party[1].max_qi, "rest restores every actor's qi")
 	t.eq(resting.day, 2, "rest advances to the next day")
 	t.eq(resting.time_of_day, 0, "rest advances to Morning")
 	t.eq(resting.event_log.entries[-1]["type"], "rested", "rest is logged")
@@ -53,7 +65,7 @@ func run(t: TestHarness) -> void:
 
 	t.context("buy")
 	var shopper := GameState.new(db, 42)
-	shopper.start_new_run("hub_a")
+	shopper.start_new_run("hub_a_interior")
 	shopper.gold = 30
 	var bought := shopper.buy("salve")
 	t.ok(bought["ok"], "buying goods from a present merchant succeeds")
@@ -72,7 +84,7 @@ func run(t: TestHarness) -> void:
 			"rejected purchase is logged")
 
 	var remote := GameState.new(db, 42)
-	remote.start_new_run("road_b")
+	remote.start_new_run("hub_a")
 	remote.gold = 30
 	var no_merchant := remote.buy("salve")
 	t.ok(not no_merchant["ok"], "buying without a present merchant is rejected")
@@ -120,3 +132,21 @@ func run(t: TestHarness) -> void:
 	t.ok(not user._consume_item("missing"), "consume helper rejects an absent item")
 	t.eq(user.inventory.get("missing", 0), 0,
 			"consume helper does not create an absent inventory entry")
+
+	t.context("determinism")
+	var first_log := _run_fixed_commands(db)
+	var second_log := _run_fixed_commands(db)
+	t.eq(first_log, second_log,
+			"same seed and enabling-system commands produce identical JSONL")
+
+
+func _run_fixed_commands(db: ContentDB) -> String:
+	var gs := GameState.new(db, 42)
+	gs.start_new_run("hub_a_interior")
+	gs.gold = 30
+	gs.buy("salve")
+	gs.use_item("salve")
+	gs.move_to_area("hub_a")
+	gs.rest()
+	gs.move_to_area("road_b")
+	return gs.event_log.to_jsonl()

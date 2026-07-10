@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AreaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/area_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hub_a_interior"
+display_name = "<hub A shop>"
+description = "A compact shop serving travelers and townsfolk."
+advances_time = false
+exits = PackedStringArray("hub_a")
+npc_ids = PackedStringArray("merchant_b")
+encounter_id = ""
+floor_color = Color(0.17, 0.16, 0.13, 1)
