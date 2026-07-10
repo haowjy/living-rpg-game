@@ -47,7 +47,7 @@ func _build() -> void:
 	add_child(_turn_marker)
 
 	sprite = TextureRect.new()
-	sprite.texture = _combatant_texture()
+	sprite.texture = CombatPortraitCatalog.resolve(combatant)
 	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	sprite.custom_minimum_size = Vector2(88, 88)
@@ -121,28 +121,3 @@ func _rebuild_badges() -> void:
 		badge.add_theme_color_override("font_color", STATUS_COLORS[status_name])
 		_badges.add_child(badge)
 
-
-func _combatant_texture() -> Texture2D:
-	var asset_id := combatant.id.get_slice("#", 0)
-	var path := "res://game/assets/generated/%s_%s.png" % [
-		"enemy" if combatant.is_enemy else "char", asset_id]
-	var texture := load(path) as Texture2D if ResourceLoader.exists(path) else null
-	# The authored placeholder ids predate their descriptive generated filenames.
-	# Keep the contract path primary, then bridge those few known placeholders.
-	if texture == null:
-		var placeholder_assets := {
-			"companion_a": "char_companion.png",
-			"monster_a": "enemy_beast.png",
-			"monster_b": "enemy_bandit.png",
-			"monster_b_leader": "enemy_bandit_leader.png",
-		}
-		if placeholder_assets.has(asset_id):
-			texture = load("res://game/assets/generated/%s" % placeholder_assets[asset_id]) as Texture2D
-	if texture == null:
-		return null
-	if combatant.is_enemy:
-		return texture
-	var atlas := AtlasTexture.new()
-	atlas.atlas = texture
-	atlas.region = Rect2(0, 0, texture.get_width() / 4.0, texture.get_height() / 4.0)
-	return atlas
