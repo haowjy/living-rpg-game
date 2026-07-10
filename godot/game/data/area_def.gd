@@ -5,6 +5,8 @@ extends Resource
 @export var id: String = ""
 @export var display_name: String = ""
 @export_multiline var description: String = ""
+## Whether traveling between this area and another time-advancing area costs time.
+@export var advances_time: bool = true
 ## Area ids reachable from here. Order controls exit placement
 ## (index 0 = west edge, 1 = east, 2 = north, 3 = south).
 @export var exits: PackedStringArray = PackedStringArray()

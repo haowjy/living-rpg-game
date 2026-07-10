@@ -9,6 +9,9 @@ var rng: RngService
 var event_log: EventLog
 
 var current_area_id: String = ""
+var day: int = 1
+## Four daily segments: Morning, Midday, Evening, Night.
+var time_of_day: int = 0
 ## World flags: String -> bool/int. The only quest/world memory.
 var flags: Dictionary = {}
 var party: Array[ActorState] = []
@@ -42,12 +45,30 @@ func move_to_area(area_id: String) -> Dictionary:
 	var here := db.area(current_area_id)
 	if not here.exits.has(area_id):
 		return _fail("No path from %s to %s." % [here.id, area_id])
+	var destination := db.area(area_id)
 	current_area_id = area_id
 	for actor in party:
 		actor.travel_recover()
 	event_log.append("traveled", "The party traveled to %s." % _area_name(area_id),
 			{"from": here.id, "to": area_id})
+	if here.advances_time and destination.advances_time:
+		advance_time()
 	return _ok()
+
+
+func advance_time(segments: int = 1) -> Dictionary:
+	if segments < 1:
+		return _fail("Time must advance by at least one segment.")
+	var elapsed := time_of_day + segments
+	day += elapsed / 4
+	time_of_day = elapsed % 4
+	event_log.append("time_advanced", "It is now Day %d — %s." % [day, time_of_day_name()],
+			{"day": day, "time_of_day": time_of_day})
+	return _ok()
+
+
+func time_of_day_name() -> String:
+	return ["Morning", "Midday", "Evening", "Night"][time_of_day]
 
 
 func learn_technique(actor_id: String, technique_id: String) -> Dictionary:
