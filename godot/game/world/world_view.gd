@@ -15,6 +15,7 @@ var _prompt: Label = null
 var _elapsed := 0.0
 var _active_affordance: Sprite2D = null
 var _ambient_bobs: Array[Sprite2D] = []
+var _actor_layer: TileMapLayer
 
 
 func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
@@ -40,9 +41,13 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	var overlay := TileMapLayer.new()
 	overlay.name = "Overlay"
 	overlay.tile_set = tile_set
+	overlay.z_index = 0
 	overlay.y_sort_enabled = true
+	# Tile sort points align with actors positioned at tile centers.
+	overlay.y_sort_origin = TILE_SIZE / 2
 	add_child(overlay)
 	_paint_rows(overlay, site.overlay_rows, true)
+	_actor_layer = overlay
 
 	var spawn_tile := Vector2i(map_size.x / 2, map_size.y / 2)
 	for placement: Dictionary in site.placements:
@@ -53,7 +58,7 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 
 	player = PLAYER_SCENE.instantiate()
 	player.position = _tile_center(spawn_tile)
-	add_child(player)
+	_actor_layer.add_child(player)
 	_start_npc_brains()
 	_add_camera(player, map_size)
 	_add_boundary(map_size)
@@ -155,7 +160,7 @@ func _add_placement(placement: Dictionary, db: ContentDB, gs: GameState) -> void
 			label = "altar"
 			color = Color(0.3, 0.5, 0.55, 0.75)
 	var node := Interactable.create(kind, target_id, prompt, position, color, label, size)
-	add_child(node)
+	_actor_layer.add_child(node)
 	_add_affordance(node)
 	if kind == "fight":
 		_add_enemy_sprite(node)
@@ -174,7 +179,7 @@ func _add_npc(position: Vector2, npc_id: String, prompt: String, color: Color) -
 	body.setup(npc_id, texture, color)
 	body.dialogue_allowed = _npc_can_initiate_dialogue
 	body.wants_dialogue.connect(func(id: String) -> void: interacted.emit("npc", id))
-	add_child(body)
+	_actor_layer.add_child(body)
 
 	var interaction := Interactable.create("npc", npc_id, prompt, Vector2.ZERO,
 			Color.TRANSPARENT, "", Vector2(34, 38))
@@ -203,7 +208,7 @@ func _add_npc(position: Vector2, npc_id: String, prompt: String, color: Color) -
 
 
 func _start_npc_brains() -> void:
-	for child in get_children():
+	for child in _actor_layer.get_children():
 		if child is not NpcBody:
 			continue
 		var body := child as NpcBody
