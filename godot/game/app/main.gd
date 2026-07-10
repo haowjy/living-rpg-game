@@ -20,6 +20,7 @@ var combat_screen: CombatScreen = null
 var _mode_root: Node
 var _transition: Transition
 var _hints: InputHints
+var _ui_sounds: UiSounds
 var _interaction_hint: Label = null
 var _active_encounter_id := ""
 var _transitioning := false
@@ -30,9 +31,18 @@ func _ready() -> void:
 	db = ContentDB.new()
 	_hints = InputHints.new()
 	add_child(_hints)
+	_ui_sounds = UiSounds.new()
+	add_child(_ui_sounds)
 	_transition = Transition.new()
 	add_child(_transition)
 	_show_title(false)
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_ui_sounds.play_cancel()
+	elif event.is_action_pressed("ui_accept"):
+		_ui_sounds.play_confirm()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -253,7 +263,10 @@ func _on_choice(action: String, args: Dictionary) -> void:
 			_show_result(gs.receive_mentor_lesson(), "Learned <technique D>.")
 		"buy_item":
 			var item_id := String(args.item_id)
-			_show_result(gs.buy(item_id), "Bought %s." % db.item(item_id).display_name)
+			var result := gs.buy(item_id)
+			if result.ok:
+				_ui_sounds.play_purchase()
+			_show_result(result, "Bought %s." % db.item(item_id).display_name)
 		"choose_spirit":
 			var spirit_id := String(args.spirit_id)
 			var result := gs.contract_spirit(spirit_id)
@@ -303,6 +316,8 @@ func _open_message(title: String, text: String) -> void:
 
 
 func _show_result(result: Dictionary, success: String) -> void:
+	if not bool(result.ok):
+		_ui_sounds.play_error()
 	_open_message("", success if bool(result.ok) else String(result.error))
 
 
