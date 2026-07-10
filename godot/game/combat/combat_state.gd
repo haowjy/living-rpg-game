@@ -119,12 +119,12 @@ func perform(command: Dictionary) -> Array[Dictionary]:
 				return [_reject("Invalid target.")]
 			events.append_array(_strike(c, target, c.attack + _passive_bonus(c), "", 0, "attacks"))
 		"technique":
-			var target := _target_from(command)
-			if target == null:
-				return [_reject("Invalid target.")]
 			var t := c.actor.technique_by_id(String(command.get("technique_id", "")))
 			if t == null:
 				return [_reject("Unknown technique.")]
+			var target := c if t.def.target_self else _target_from(command)
+			if target == null:
+				return [_reject("Invalid target.")]
 			if c.qi() < t.qi_cost():
 				return [_reject("Not enough qi for %s." % t.def.display_name)]
 			c.spend_qi(t.qi_cost())
@@ -191,9 +191,12 @@ func _strike(attacker: Combatant, target: Combatant, power: int,
 
 func _use_technique(c: Combatant, target: Combatant, t: TechniqueState) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
-	var power := t.power() + c.attack + _passive_bonus(c)
-	var broke := Damage.apply_break(t.def.element, t.def.break_power, target)
-	var dealt := Damage.apply_hit(power, 0, target)
+	var broke := false
+	var dealt := 0
+	if not t.def.target_self:
+		var power := t.power() + c.attack + _passive_bonus(c)
+		broke = Damage.apply_break(t.def.element, t.def.break_power, target)
+		dealt = Damage.apply_hit(power, 0, target)
 	events.append(_log("technique_used",
 			"%s uses %s on %s for %d." % [c.display_name, t.def.display_name,
 				target.display_name, dealt],

@@ -25,6 +25,8 @@ const LEVEL_QI_DISCOUNT: Array[int] = [0, 0, 1, 1, 2]
 @export var applies_status: String = ""
 ## Stacks of applies_status added on hit.
 @export var status_stacks: int = 0
+## True when the technique affects its user instead of an enemy.
+@export var target_self: bool = false
 ## Damage the technique deals to an enemy's toughness (break) meter
 ## when the element matches one of the enemy's weak tags.
 @export var break_power: int = 1

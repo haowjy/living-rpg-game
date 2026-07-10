@@ -45,6 +45,24 @@ func _play_out(combat: CombatState, max_steps: int = 200) -> void:
 
 
 func run(t: TestHarness) -> void:
+	t.context("self-target technique")
+	var stance_db := ContentDB.new()
+	var stance_gs := GameState.new(stance_db, 7)
+	stance_gs.start_new_run("hub_a")
+	stance_gs.learn_technique("player", "technique_c")
+	var stance := CombatState.new(stance_db, stance_gs.rng, stance_gs.event_log,
+			stance_db.encounter("enc_road"), stance_gs.party)
+	var stance_target_hp := stance.enemies[0].hp()
+	var stance_events := stance.perform(
+			{"kind": "technique", "technique_id": "technique_c"})
+	t.eq(stance.party[0].status("guard"), 2, "guard stance applies guard to its user")
+	t.eq(stance.enemies[0].hp(), stance_target_hp, "guard stance deals no enemy damage")
+	var stance_amount := -1
+	for event in stance_events:
+		if String(event["type"]) == "technique_used":
+			stance_amount = int(event["data"]["amount"])
+	t.eq(stance_amount, 0, "guard stance records zero damage")
+
 	t.context("turn order")
 	var gs := _full_party_state(11)
 	var combat := CombatState.new(gs.db, gs.rng, gs.event_log, gs.db.encounter("enc_road"), gs.party)

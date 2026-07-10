@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TechniqueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/technique_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "technique_c"
+display_name = "<technique C; guard stance>"
+element = "earth"
+base_power = 1
+base_qi_cost = 2
+applies_status = "guard"
+status_stacks = 2
+target_self = true
+break_power = 0
