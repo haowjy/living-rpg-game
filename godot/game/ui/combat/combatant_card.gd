@@ -16,6 +16,9 @@ var _hp_label: Label
 var _qi_label: Label
 var _hp_bar: CombatBar
 var _qi_bar: CombatBar
+var _toughness_label: Label
+var _toughness_bar: CombatBar
+var _weakness_label: Label
 var _badges: HBoxContainer
 var _turn_marker: Label
 var _panel: NinePatchRect
@@ -23,7 +26,7 @@ var _panel: NinePatchRect
 
 func setup(p_combatant: Combatant) -> void:
 	combatant = p_combatant
-	custom_minimum_size = Vector2(274, 154 if combatant.is_enemy else 174)
+	custom_minimum_size = Vector2(274, 174)
 	_build()
 	refresh(false)
 
@@ -80,6 +83,17 @@ func _build() -> void:
 	_qi_bar = CombatBar.new()
 	details.add_child(_qi_bar)
 
+	_toughness_label = Label.new()
+	_toughness_label.add_theme_font_size_override("font_size", 11)
+	details.add_child(_toughness_label)
+	_toughness_bar = CombatBar.new()
+	details.add_child(_toughness_bar)
+
+	_weakness_label = Label.new()
+	_weakness_label.add_theme_font_size_override("font_size", 10)
+	_weakness_label.add_theme_color_override("font_color", Color("6f665e"))
+	details.add_child(_weakness_label)
+
 	_badges = HBoxContainer.new()
 	_badges.add_theme_constant_override("separation", 4)
 	details.add_child(_badges)
@@ -100,6 +114,20 @@ func refresh(is_current: bool) -> void:
 	if show_qi:
 		_qi_label.text = "QI  %d / %d" % [combatant.qi(), combatant.actor.max_qi]
 		_qi_bar.set_meter(combatant.qi(), combatant.actor.max_qi, true)
+	var show_break := combatant.is_enemy and combatant.max_toughness > 0
+	_toughness_label.visible = show_break
+	_toughness_bar.visible = show_break
+	_weakness_label.visible = show_break
+	if show_break:
+		_toughness_label.text = ("BROKEN" if combatant.broken else
+				"TOUGHNESS  %d / %d" % [combatant.toughness, combatant.max_toughness])
+		_toughness_label.add_theme_color_override("font_color",
+				Color("ef6461") if combatant.broken else Color("594c43"))
+		_toughness_bar.set_meter(combatant.toughness, combatant.max_toughness)
+		var weakness_names: PackedStringArray = []
+		for tag in combatant.weak_tags:
+			weakness_names.append(String(tag).to_upper())
+		_weakness_label.text = "WEAK  %s" % " · ".join(weakness_names)
 	_rebuild_badges()
 	modulate = Color.WHITE if combatant.is_alive() else Color(0.55, 0.55, 0.58, 0.8)
 
@@ -120,4 +148,3 @@ func _rebuild_badges() -> void:
 		badge.add_theme_font_size_override("font_size", 10)
 		badge.add_theme_color_override("font_color", STATUS_COLORS[status_name])
 		_badges.add_child(badge)
-
