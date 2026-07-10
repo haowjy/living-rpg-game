@@ -25,6 +25,10 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 
 
+func face_toward(target_position: Vector2) -> void:
+	_visual.face(to_local(target_position))
+
+
 func _on_zone_changed(_area: Area2D) -> void:
 	nearby = null
 	var best_distance := INF

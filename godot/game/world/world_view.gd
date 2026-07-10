@@ -90,6 +90,7 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and player != null and player.nearby != null:
+		player.face_toward(player.nearby.global_position)
 		interacted.emit(player.nearby.kind, player.nearby.target_id)
 
 
