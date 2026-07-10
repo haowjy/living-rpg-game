@@ -10,6 +10,7 @@ CELL_SIZE = 64
 FRAMES = 4
 DIRECTIONS = ("down", "left", "right", "up")
 SHEET_SIZE = CELL_SIZE * FRAMES
+OUTPUT_DIR = Path(__file__).parents[1] / "assets/characters/paper_doll"
 TRANSPARENT = (0, 0, 0, 0)
 
 SKIN = (211, 145, 104, 255)
@@ -154,7 +155,7 @@ def generate(name: str, draw) -> None:
     for direction in range(len(DIRECTIONS)):
         for frame in range(FRAMES):
             draw(sheet, direction, frame)
-    sheet.write_png(Path(__file__).with_name(f"{name}.png"))
+    sheet.write_png(OUTPUT_DIR / f"{name}.png")
 
 
 if __name__ == "__main__":

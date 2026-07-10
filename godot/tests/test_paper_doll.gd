@@ -7,10 +7,16 @@ const PAPER_DOLL_SCENE := preload("res://game/actors/paper_doll_character.tscn")
 func run(t: TestHarness) -> void:
 	t.context("paper doll")
 	var visual := PAPER_DOLL_SCENE.instantiate() as PaperDollCharacter
+	t.ok(visual != null, "scene instantiates as a PaperDollCharacter")
+	if visual == null:
+		return
 	var layers := _sprite_layers(visual)
 
 	t.eq(layers.size(), 3, "scene stacks a body and two overlay layers")
 	for layer in layers:
+		t.ok(layer.texture != null, "%s has a texture" % layer.name)
+		if layer.texture == null:
+			continue
 		t.eq(layer.texture.get_size(), Vector2(256, 256),
 				"%s uses a 4x4 sheet of 64px cells" % layer.name)
 		t.eq(layer.hframes, 4, "%s has four walk frames" % layer.name)
