@@ -44,10 +44,10 @@ addons/godot_ai/   Editor MCP bridge — dev tooling only, never a runtime
 
 ## Rules
 
-- **Determinism is the crown rule**: integer math in sim code (floats are
-  presentation-only); all sim randomness flows through the one seeded RNG
-  service; no `Time`/physics reads in sim code. Same seed + same commands
-  must produce an identical event log — a test enforces this.
+- **Determinism**: integer math in sim code (floats are presentation-only);
+  all sim randomness flows through the one seeded RNG service; no
+  `Time`/physics reads in sim code. Same seed + same commands must produce
+  an identical event log — a test enforces this.
 - Keep the headless suite green and extend it with every new sim rule:
   ```bash
   godot --headless --path godot --quit                      # boots clean

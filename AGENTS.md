@@ -14,9 +14,6 @@ There are two engines here:
   and agent behavior through narrow contracts ("commands in, events out"). It
   must not become the only way the game works.
 
-`godot/` is not a prototype or a throwaway — it is the game. Treat its code,
-authored content, and tests as production.
-
 ## Key Rules
 
 - Prefer a small working vertical slice over broad scaffolding.
