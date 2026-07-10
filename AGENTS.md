@@ -40,5 +40,5 @@ Two engines:
 ## Read Next
 
 - `godot/AGENTS.md` — how to work in the game.
-- `docs/ai-dev-workflow.md` — branches, worktrees, verification, Godot MCP.
+- `docs/godot-workflow.md` — worktrees vs binary scenes, asset policy, Godot MCP.
 - `design/pages/implementation-spec.md` — the V0 LLM-engine contract.

@@ -1,4 +1,4 @@
-# AI Development Workflow
+# Godot Workflow
 
 This repo should optimize for coherent progress, not maximum parallelism.
 
