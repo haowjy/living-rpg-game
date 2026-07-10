@@ -32,9 +32,7 @@ func _ready() -> void:
 	db = ContentDB.new()
 	_flow_host = Control.new()
 	_flow_host.name = "FlowHost"
-	_flow_host.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_flow_host.size = get_viewport().get_visible_rect().size
-	get_viewport().size_changed.connect(_fit_flow_host)
+	_flow_host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_flow_host)
 	_hints = InputHints.new()
 	add_child(_hints)
@@ -43,10 +41,6 @@ func _ready() -> void:
 	_transition = Transition.new()
 	add_child(_transition)
 	_show_title(false)
-
-
-func _fit_flow_host() -> void:
-	_flow_host.size = get_viewport().get_visible_rect().size
 
 
 func _input(event: InputEvent) -> void:
