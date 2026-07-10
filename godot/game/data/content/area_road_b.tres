@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AreaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/area_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "road_b"
+display_name = "<road B>"
+description = "The trade road between the settlement and the wilds. Beasts prowl it."
+exits = PackedStringArray("hub_a", "ruin_c", "shrine_d")
+npc_ids = PackedStringArray()
+encounter_id = "enc_road"
+floor_color = Color(0.16, 0.18, 0.14, 1)

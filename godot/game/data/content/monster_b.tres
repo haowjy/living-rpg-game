@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/enemy_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "monster_b"
+display_name = "<monster B; bandit>"
+max_hp = 14
+speed = 4
+attack = 3
+toughness = 6
+weak_tags = PackedStringArray("force", "gale")
+moves = Array[Dictionary]([{
+"name": "slashes",
+"power": 0,
+"applies_status": "",
+"status_stacks": 0,
+"weight": 3
+}, {
+"name": "swings a torch at",
+"power": 0,
+"applies_status": "burn",
+"status_stacks": 2,
+"weight": 2
+}])

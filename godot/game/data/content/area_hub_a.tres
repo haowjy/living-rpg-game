@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AreaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/area_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hub_a"
+display_name = "<hub A>"
+description = "A small settlement holding itself together. People here remember what you do."
+exits = PackedStringArray("road_b")
+npc_ids = PackedStringArray("elder_a", "merchant_b", "rival_c")
+encounter_id = ""
+floor_color = Color(0.2, 0.19, 0.15, 1)

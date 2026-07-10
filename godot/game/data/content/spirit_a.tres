@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpiritDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/spirit_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "spirit_a"
+display_name = "<spirit A>"
+element = "gale"
+max_hp = 12
+max_qi = 6
+speed = 7
+attack = 2
+passive_stat = "attack"
+passive_amount = 2
+invoke_name = "<invoke A; gale rush>"
+invoke_power = 5
+invoke_status = ""
+invoke_status_stacks = 0
+invoke_hits_all = true
+rest_rounds = 2

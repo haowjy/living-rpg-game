@@ -12,26 +12,31 @@ Create a clean, beautiful, playable Godot prototype of the core Living RPG loop:
 4. The UI makes location, options, consequences, and character state clear.
 5. The prototype can later accept LLM-authored content through explicit data contracts, but it must be fun and testable without an LLM.
 
-## Current State
+## Current State (updated 2026-07-10)
 
-The repo has a minimal Godot 4.7 scaffold at `godot/`:
+The first playable deterministic slice is implemented. See `godot/PLAYTEST.md`
+for how to run and verify it, and `design/pages/decisions.md` ("Prototype combat
+direction") for the combat/spirit decisions it encodes.
 
-```text
-godot/
-  project.godot
-  icon.svg
-  game/app/main.tscn
-  game/world/
-  game/actors/
-  game/interaction/
-  game/combat/
-  game/story/
-  game/ui/
-  game/data/
-  game/debug/
-```
+What exists now:
 
-There is no gameplay implementation yet. That is intentional.
+- **Sim core ("commands in, events out")** — plain typed RefCounted classes, no scene-tree
+  dependency: `game/story/` (GameState, EventLog, ActorState, TechniqueState, SpiritState),
+  `game/combat/` (CombatState, Combatant, Damage), `game/shared/rng_service.gd` (seeded RNG).
+  Every state change appends a serializable event to one append-only EventLog — this is the
+  future LLM contract surface.
+- **Turn-based party combat** — speed-ordered turns, per-character qi, stacking statuses
+  (vulnerable/burn/guard), enemy break meters via element tags, spirit Bonded/Invoked/Resting
+  tri-state, technique use-counters with proficiency thresholds.
+- **Authored content as .tres** under `game/data/content/` (areas, NPCs, enemies, techniques,
+  spirit, encounters) with typed Resource definition scripts in `game/data/`.
+- **Overworld** — walkable placeholder areas (hub + road + ruin + shrine), exits, NPC dialogue
+  with flag-branching choices, shrine pact, two-outcome quest (fight or negotiate).
+- **Observability** — event-log panel [L], debug overlay [F3], toast errors, headless test
+  suite (`godot --headless --path godot -s res://tests/run_tests.gd`, no addon required).
+
+Known gaps / next passes: real art and tiles, save/load, balance, the reactive timing layer
+(deferred by decision), and the LLM engine dirs (`agents/`, `tools/`, `world-state/`).
 
 ## Product Direction
 

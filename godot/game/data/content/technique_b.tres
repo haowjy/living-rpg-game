@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechniqueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/technique_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "technique_b"
+display_name = "<technique B; sweep>"
+element = "ember"
+base_power = 2
+base_qi_cost = 2
+applies_status = "burn"
+status_stacks = 2
+break_power = 1

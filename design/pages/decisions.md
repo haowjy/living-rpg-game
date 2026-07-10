@@ -2,6 +2,29 @@
 
 Decisions from the design review. These supersede conflicting statements in earlier bundle pages.
 
+## 2026-07-10 — Prototype combat direction (supersedes "Combat direction" below)
+
+Decided while building the first deterministic Godot slice:
+
+- **Turn-based party combat from the start.** The prototype's conflict model is a visual
+  turn-based battle screen, not narrative choice resolution. Reference points shifted from
+  Darkest Dungeon toward Chained Echoes / Persona / Octopath / Expedition 33.
+- **Team play = stacking effects and combos**, Slay-the-Spire-style: statuses are integer
+  stacks (vulnerable, burn, guard); the party coordinates by setting up and exploiting
+  stacks across members. No shared party gauge. Resource economy is **per-character qi**.
+- **Break meters:** enemies have toughness depleted only by matching element/type tags;
+  emptying it stuns for a round and adds a damage window (Octopath/E33-style).
+- **Spirits (new system):** xianxia-style spirit-beast contracts. A spirit is a party member
+  with a Golden-Sun-Djinn-shaped tri-state: **Bonded** (passive buff on its contract holder,
+  Invoke available) → **Invoked** (big move) → **Resting** (passive suspended, cooldown).
+  Contracts are earned narrative moments with a visible cost (a vow), never collection.
+  Small-roster philosophy: few, deeply bonded, authored spirits — not a box.
+- **Expedition 33-style reactive timing (parry/dodge) is deferred.** When added, it must be a
+  pure timing-quality multiplier layered on the deterministic core, with an auto-resolve
+  accessibility toggle shipped in the same commit (Hi-Fi Rush pattern).
+- **Technique proficiency in combat:** techniques track use counters; thresholds raise power
+  and cut qi cost. Proficiency changes are combat events in the log.
+
 ## Setting
 
 Medieval fantasy with strange power progression. The world is grounded medieval — kingdoms, guilds, churches, trade routes, bandits, ruins, shrines — but power can become mythic and personal over time.

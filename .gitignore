@@ -26,3 +26,6 @@ mars.lock
 
 # Local shared asset mounts for playtesting worktrees
 godot/external_assets/
+
+# Bridge-transfer scratch (Claude can move files here but not delete them)
+_to_delete/
