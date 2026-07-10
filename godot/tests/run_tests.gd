@@ -6,6 +6,7 @@ extends SceneTree
 ## Exits 0 when green, 1 when any assertion failed.
 
 const TEST_SCRIPTS: Array[String] = [
+	"res://tests/test_paper_doll.gd",
 	"res://tests/test_technique.gd",
 	"res://tests/test_damage.gd",
 	"res://tests/test_game_state.gd",

@@ -9,15 +9,10 @@ const MOVE_SPEED := 320.0
 var nearby: Interactable = null
 
 @onready var _zone: Area2D = $InteractZone
+@onready var _visual: PaperDollCharacter = $PaperDollCharacter
 
 
 func _ready() -> void:
-	var visual := Polygon2D.new()
-	visual.polygon = PackedVector2Array([
-		Vector2(-14, -18), Vector2(14, -18), Vector2(14, 18), Vector2(-14, 18),
-	])
-	visual.color = Color(0.85, 0.85, 0.9)
-	add_child(visual)
 	var label := Label.new()
 	label.text = "<player>"
 	label.position = Vector2(-32, -42)
@@ -29,6 +24,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = direction * MOVE_SPEED
+	_visual.set_motion(direction)
 	move_and_slide()
 
 
