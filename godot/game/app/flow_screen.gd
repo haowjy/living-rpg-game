@@ -10,7 +10,7 @@ var _committed := false
 
 
 func setup(heading: String, lines: Array[String], actions: Array[Dictionary]) -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
 	background.color = Color("10151c")
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
