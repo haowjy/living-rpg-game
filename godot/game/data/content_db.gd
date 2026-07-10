@@ -30,7 +30,10 @@ func _load_dir(path: String) -> void:
 	var file_name := dir.get_next()
 	while file_name != "":
 		if dir.current_is_dir():
-			_load_dir(path.path_join(file_name))
+			# Site maps are presentation data loaded directly by WorldView, not
+			# definitions indexed by this simulation content registry.
+			if file_name != "maps":
+				_load_dir(path.path_join(file_name))
 		elif file_name.ends_with(".tres"):
 			_register(load(path.path_join(file_name)))
 		file_name = dir.get_next()

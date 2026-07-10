@@ -1,13 +1,12 @@
 class_name WorldView
 extends Node2D
-## Builds the walkable placeholder view of the current area from its AreaDef:
-## floor, walls, exits, NPCs, and special markers. Emits interactions upward;
-## owns no game state.
+## Renders an AreaDef from its SiteMap and forwards interactions to Main.
 
 signal interacted(kind: String, target_id: String)
 
-const AREA_SIZE := Vector2(1440, 900)
+const TILE_SIZE := 32
 const PLAYER_SCENE := preload("res://game/actors/player.tscn")
+const MAP_DIRECTORY := "res://game/data/content/maps/"
 
 var player: Player = null
 var _prompt: Label = null
@@ -17,70 +16,45 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	for child in get_children():
 		child.queue_free()
 
-	var floor_rect := ColorRect.new()
-	floor_rect.color = area.floor_color
-	floor_rect.size = AREA_SIZE
-	add_child(floor_rect)
+	y_sort_enabled = true
+	var site := _load_site(area.id)
+	var map_size := site.size()
+	var tile_set := TilesetBuilder.build()
 
-	_add_walls()
+	var ground := TileMapLayer.new()
+	ground.name = "Ground"
+	ground.tile_set = tile_set
+	ground.z_index = -100
+	ground.y_sort_enabled = false
+	add_child(ground)
+	_paint_rows(ground, site.ground_rows, false)
 
-	# Exits along the edges: 0 = west, 1 = east, 2 = north, 3 = south.
-	var edge_positions: Array[Vector2] = [
-		Vector2(70, AREA_SIZE.y / 2.0), Vector2(AREA_SIZE.x - 70, AREA_SIZE.y / 2.0),
-		Vector2(AREA_SIZE.x / 2.0, 90), Vector2(AREA_SIZE.x / 2.0, AREA_SIZE.y - 90),
-	]
-	for i in area.exits.size():
-		var exit_id := area.exits[i]
-		var exit_def := db.area(exit_id)
-		add_child(Interactable.create("exit", exit_id,
-				"travel to %s" % exit_def.display_name,
-				edge_positions[mini(i, 3)], Color(0.3, 0.35, 0.45),
-				"→ %s" % exit_def.display_name, Vector2(52, 52)))
+	var overlay := TileMapLayer.new()
+	overlay.name = "Overlay"
+	overlay.tile_set = tile_set
+	overlay.y_sort_enabled = true
+	add_child(overlay)
+	_paint_rows(overlay, site.overlay_rows, true)
 
-	var npc_x := AREA_SIZE.x / 2.0 - 160.0
-	for npc_id in area.npc_ids:
-		var npc := db.npc(npc_id)
-		add_child(Interactable.create("npc", npc_id, "talk to %s" % npc.display_name,
-				Vector2(npc_x, AREA_SIZE.y / 2.0 - 140), npc.body_color,
-				"%s\n(%s)" % [npc.display_name, npc.role]))
-		npc_x += 160.0
-
-	match area.id:
-		"road_b":
-			if gs.can_fight(area.encounter_id):
-				add_child(Interactable.create("fight", area.encounter_id,
-						"face the beasts", Vector2(AREA_SIZE.x / 2.0 + 200, AREA_SIZE.y / 2.0),
-						Color(0.55, 0.25, 0.25), "<monster A> pack", Vector2(44, 44)))
-		"ruin_c":
-			add_child(Interactable.create("ruin", "ruin_confrontation",
-					"approach the ruin", Vector2(AREA_SIZE.x / 2.0, AREA_SIZE.y / 2.0 - 120),
-					Color(0.45, 0.3, 0.5), "<ruin C> gate", Vector2(64, 48)))
-		"shrine_d":
-			add_child(Interactable.create("shrine", "shrine_d",
-					"approach the altar", Vector2(AREA_SIZE.x / 2.0, AREA_SIZE.y / 2.0 - 120),
-					Color(0.3, 0.5, 0.55), "altar", Vector2(48, 56)))
+	var spawn_tile := Vector2i(map_size.x / 2, map_size.y / 2)
+	for placement: Dictionary in site.placements:
+		if placement.get("kind", "") == "player_spawn":
+			spawn_tile = Vector2i(placement.tx, placement.ty)
+		else:
+			_add_placement(placement, db, gs)
 
 	player = PLAYER_SCENE.instantiate()
-	player.position = AREA_SIZE / 2.0 + Vector2(0, 160)
+	player.position = _tile_center(spawn_tile)
 	add_child(player)
-
-	_prompt = Label.new()
-	_prompt.position = Vector2(20, AREA_SIZE.y - 40)
-	add_child(_prompt)
-
-	var title := Label.new()
-	title.text = "%s — %s" % [area.display_name, area.description]
-	title.position = Vector2(20, 12)
-	add_child(title)
+	_add_camera(player, map_size)
+	_add_boundary(map_size)
+	_add_prompt()
 
 
 func _process(_delta: float) -> void:
 	if player == null or _prompt == null:
 		return
-	if player.nearby != null:
-		_prompt.text = "[E] %s" % player.nearby.prompt
-	else:
-		_prompt.text = ""
+	_prompt.text = "[E] %s" % player.nearby.prompt if player.nearby != null else ""
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -88,19 +62,141 @@ func _unhandled_input(event: InputEvent) -> void:
 		interacted.emit(player.nearby.kind, player.nearby.target_id)
 
 
-func _add_walls() -> void:
-	var walls := StaticBody2D.new()
-	var extents := [
-		[Vector2(AREA_SIZE.x / 2.0, -10), Vector2(AREA_SIZE.x, 20)],
-		[Vector2(AREA_SIZE.x / 2.0, AREA_SIZE.y + 10), Vector2(AREA_SIZE.x, 20)],
-		[Vector2(-10, AREA_SIZE.y / 2.0), Vector2(20, AREA_SIZE.y)],
-		[Vector2(AREA_SIZE.x + 10, AREA_SIZE.y / 2.0), Vector2(20, AREA_SIZE.y)],
+func _load_site(area_id: String) -> SiteMap:
+	var path := "%s%s.tres" % [MAP_DIRECTORY, area_id]
+	if ResourceLoader.exists(path):
+		var loaded := load(path) as SiteMap
+		if loaded != null and not loaded.ground_rows.is_empty():
+			return loaded
+	push_warning("No valid SiteMap for %s; using grass fallback" % area_id)
+	var fallback := SiteMap.new()
+	fallback.id = area_id
+	var ground := PackedStringArray()
+	var overlay := PackedStringArray()
+	for y in 24:
+		ground.append(".".repeat(40))
+		overlay.append(" ".repeat(40))
+	fallback.ground_rows = ground
+	fallback.overlay_rows = overlay
+	fallback.placements = [{"kind": "player_spawn", "tx": 20, "ty": 12}]
+	return fallback
+
+
+func _paint_rows(layer: TileMapLayer, rows: PackedStringArray, allow_empty: bool) -> void:
+	for y in rows.size():
+		for x in rows[y].length():
+			var character := rows[y].substr(x, 1)
+			if allow_empty and character == " ":
+				continue
+			if not TileVocabulary.TILES.has(character):
+				push_warning("Unknown map character '%s' at %d,%d" % [character, x, y])
+				continue
+			var entry: Dictionary = TileVocabulary.TILES[character]
+			layer.set_cell(Vector2i(x, y), TilesetBuilder.ATLAS_SOURCE_ID, entry.atlas)
+
+
+func _add_placement(placement: Dictionary, db: ContentDB, gs: GameState) -> void:
+	var kind: String = placement.get("kind", "")
+	var target_id: String = placement.get("id", "")
+	if kind == "fight" and not gs.can_fight(target_id):
+		return
+	var position := _tile_center(Vector2i(placement.tx, placement.ty))
+	var prompt := "interact"
+	var label := ""
+	var color := Color(0.35, 0.4, 0.46, 0.85)
+	var size := Vector2(36, 36)
+	match kind:
+		"npc":
+			var npc := db.npc(target_id)
+			prompt = "talk to %s" % npc.display_name
+			label = npc.display_name
+			color = npc.body_color
+		"exit":
+			var destination := db.area(target_id)
+			prompt = "travel to %s" % destination.display_name
+			label = "→ %s" % destination.display_name
+			color = Color(0.25, 0.3, 0.38, 0.55)
+		"fight":
+			prompt = "face the beasts"
+			label = "beast tracks"
+			color = Color(0.55, 0.22, 0.2, 0.8)
+		"ruin":
+			prompt = "approach the ruin"
+			label = "ruined gate"
+			size = Vector2(56, 44)
+		"shrine":
+			prompt = "approach the altar"
+			label = "altar"
+			color = Color(0.3, 0.5, 0.55, 0.75)
+	var node := Interactable.create(kind, target_id, prompt, position, color, label, size)
+	add_child(node)
+	if kind == "npc":
+		_add_npc_sprite(node, target_id)
+
+
+func _add_npc_sprite(node: Interactable, npc_id: String) -> void:
+	var path := "res://game/assets/generated/char_%s.png" % npc_id
+	if not ResourceLoader.exists(path):
+		# Authored NPC ids carry a story suffix (reeve_f); sheets are named for
+		# the readable role (char_reeve.png).
+		path = "res://game/assets/generated/char_%s.png" % npc_id.get_slice("_", 0)
+	if not ResourceLoader.exists(path):
+		return
+	for child in node.get_children():
+		if child is Polygon2D:
+			child.visible = false
+	var sprite := Sprite2D.new()
+	sprite.texture = load(path)
+	sprite.hframes = 4
+	sprite.vframes = 4
+	sprite.frame_coords = Vector2i(0, 0)
+	sprite.scale = Vector2(0.72, 0.72)
+	sprite.position.y = -10
+	node.add_child(sprite)
+
+
+func _add_camera(target: Node2D, map_size: Vector2i) -> void:
+	var camera := Camera2D.new()
+	camera.position_smoothing_enabled = true
+	camera.position_smoothing_speed = 7.0
+	camera.limit_left = 0
+	camera.limit_top = 0
+	camera.limit_right = map_size.x * TILE_SIZE
+	camera.limit_bottom = map_size.y * TILE_SIZE
+	camera.limit_smoothed = true
+	camera.zoom = Vector2(1.25, 1.25)
+	target.add_child(camera)
+
+
+func _add_boundary(map_size: Vector2i) -> void:
+	var bounds := StaticBody2D.new()
+	bounds.name = "MapBoundary"
+	var pixel_size := Vector2(map_size * TILE_SIZE)
+	var segments := [
+		[Vector2(pixel_size.x / 2.0, -8), Vector2(pixel_size.x + 32, 16)],
+		[Vector2(pixel_size.x / 2.0, pixel_size.y + 8), Vector2(pixel_size.x + 32, 16)],
+		[Vector2(-8, pixel_size.y / 2.0), Vector2(16, pixel_size.y)],
+		[Vector2(pixel_size.x + 8, pixel_size.y / 2.0), Vector2(16, pixel_size.y)],
 	]
-	for pair in extents:
+	for segment in segments:
 		var shape := CollisionShape2D.new()
-		var rect := RectangleShape2D.new()
-		rect.size = pair[1]
-		shape.shape = rect
-		shape.position = pair[0]
-		walls.add_child(shape)
-	add_child(walls)
+		var rectangle := RectangleShape2D.new()
+		rectangle.size = segment[1]
+		shape.position = segment[0]
+		shape.shape = rectangle
+		bounds.add_child(shape)
+	add_child(bounds)
+
+
+func _add_prompt() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 10
+	_prompt = Label.new()
+	_prompt.position = Vector2(24, 840)
+	_prompt.add_theme_font_size_override("font_size", 22)
+	canvas.add_child(_prompt)
+	add_child(canvas)
+
+
+func _tile_center(tile: Vector2i) -> Vector2:
+	return Vector2(tile * TILE_SIZE) + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
