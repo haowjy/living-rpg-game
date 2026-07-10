@@ -71,6 +71,18 @@ func time_of_day_name() -> String:
 	return ["Morning", "Midday", "Evening", "Night"][time_of_day]
 
 
+func rest() -> Dictionary:
+	if current_area_id != "hub_a":
+		return _fail("The party can only rest at <hub A>.")
+	for actor in party:
+		actor.hp = actor.max_hp
+		actor.qi = actor.max_qi
+	advance_time(4 - time_of_day)
+	event_log.append("rested", "The party rested until Morning.",
+			{"day": day, "time_of_day": time_of_day})
+	return _ok()
+
+
 func learn_technique(actor_id: String, technique_id: String) -> Dictionary:
 	var actor := _actor(actor_id)
 	if actor == null:
