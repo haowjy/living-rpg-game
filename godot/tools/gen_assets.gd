@@ -323,7 +323,7 @@ func _generate_characters() -> void:
 		_save(sheet, "char_%s.png" % character.name)
 	_draw_spirit("spirit_a", SHRINE_TEAL, WATER_LIGHT, 0)
 	_draw_spirit("spirit_b", FOLIAGE_MID, GRASS_LIGHT, 1)
-	_draw_spirit("spirit_c", FLOWER_RED, FLOWER_YELLOW, 2)
+	_draw_spirit("spirit_c", DIRT, FLOWER_YELLOW, 2)
 
 
 func _draw_spirit(name: String, body: Color, accent: Color, shape: int) -> void:
