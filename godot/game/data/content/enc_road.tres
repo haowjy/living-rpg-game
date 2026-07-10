@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/encounter_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "enc_road"
+display_name = "Beasts on <road B>"
+intro_text = "Two of <monster A>'s kind block the road, hackles raised."
+enemy_ids = PackedStringArray("monster_a", "monster_a")
+victory_flag = "road_cleared"
+repeatable = true

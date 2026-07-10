@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TechniqueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/technique_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "technique_a"
+display_name = "<technique A; strike>"
+element = "force"
+base_power = 3
+base_qi_cost = 3
+applies_status = "vulnerable"
+status_stacks = 2
+break_power = 2

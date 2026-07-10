@@ -13,8 +13,19 @@ world-state/runtime/
 
 .claude/
 .opencode/
-.codex/
+.codex/*
+!.codex/
+!.codex/godot-ai.config.toml
 .pi/
 .cursor/
 .mars/
+mars.lock
 
+# Godot editor/import cache
+.godot/
+
+# Local shared asset mounts for playtesting worktrees
+godot/external_assets/
+
+# Bridge-transfer scratch (Claude can move files here but not delete them)
+_to_delete/

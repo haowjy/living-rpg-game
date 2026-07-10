@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EncounterDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/encounter_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "enc_ruin"
+display_name = "The band in <ruin C>"
+intro_text = "<monster B>'s band bars the way. The leader steps forward."
+enemy_ids = PackedStringArray("monster_b", "monster_b_leader")
+victory_flag = "quest_a_resolved_combat"
+repeatable = false

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AreaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/area_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "shrine_d"
+display_name = "<shrine D>"
+description = "An old roadside shrine. Something is still listening here."
+exits = PackedStringArray("road_b")
+npc_ids = PackedStringArray()
+encounter_id = ""
+floor_color = Color(0.14, 0.17, 0.19, 1)

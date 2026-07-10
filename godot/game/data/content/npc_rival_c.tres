@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/data/npc_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rival_c"
+display_name = "<rival C>"
+role = "rival"
+body_color = Color(0.65, 0.4, 0.45, 1)
