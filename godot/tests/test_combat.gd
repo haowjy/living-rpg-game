@@ -191,11 +191,15 @@ func run(t: TestHarness) -> void:
 	t.ok(grind_types.has("proficiency_gained"), "proficiency threshold logged")
 
 	t.context("determinism")
-	var first_jsonl := _scripted_run_jsonl(99)
-	var second_jsonl := _scripted_run_jsonl(99)
-	t.ok(first_jsonl == second_jsonl, "same seed produces an identical event log")
-	var different := _scripted_run_jsonl(100)
-	t.ok(first_jsonl != different, "different seed produces a different log")
+	var first_run := _scripted_rng_run(99)
+	var second_run := _scripted_rng_run(99)
+	t.ok(not first_run.enemy_actions.is_empty(),
+			"determinism scenario includes randomized enemy actions")
+	t.ok(first_run.jsonl == second_run.jsonl,
+			"same seed produces an identical event log")
+	var different_run := _scripted_rng_run(93)
+	t.ok(first_run.enemy_actions != different_run.enemy_actions,
+			"different seeds select different enemy actions")
 
 	t.context("defeat")
 	var weak_db := ContentDB.new()
@@ -212,8 +216,23 @@ func run(t: TestHarness) -> void:
 	t.eq(doomed.outcome, CombatState.Outcome.DEFEAT, "party falls in hopeless battle")
 
 
-func _scripted_run_jsonl(seed_value: int) -> String:
-	var gs := _full_party_state(seed_value)
-	var combat := CombatState.new(gs.db, gs.rng, gs.event_log, gs.db.encounter("enc_road"), gs.party)
+func _scripted_rng_run(seed_value: int) -> Dictionary:
+	var db := ContentDB.new()
+	var gs := GameState.new(db, seed_value)
+	gs.start_new_run("hub_a")
+	# Keep the authored encounter and public battle driver, but make party hits
+	# weak and party health deep enough that enemies take many weighted actions.
+	for actor in gs.party:
+		actor.attack = 0
+		actor.max_hp = 100
+		actor.hp = actor.max_hp
+		actor.techniques.clear()
+	var combat := CombatState.new(db, gs.rng, gs.event_log,
+			db.encounter("enc_road"), gs.party)
 	_play_out(combat)
-	return gs.event_log.to_jsonl()
+	var enemy_actions: Array[Dictionary] = []
+	for event in gs.event_log.entries:
+		if String(event["type"]) == "damage_dealt" \
+				and String(event["data"].get("attacker_id", "")).begins_with("monster_"):
+			enemy_actions.append(event)
+	return {"jsonl": gs.event_log.to_jsonl(), "enemy_actions": enemy_actions}
