@@ -1,27 +1,37 @@
-# Living RPG Engine
+# Living RPG
 
-This repo is a design-first game engine workspace for Living Story Sandbox RPG. It contains the long-term LLM-assisted world simulation design, and now a minimal Godot subproject intended to become a deterministic playable prototype.
+This repo is the Living Story Sandbox RPG: the game itself (`godot/`), the
+design corpus for the game and its LLM-assisted world simulation, and the
+future agent/tool/world-state layers that simulation will need.
 
 ## Mental Model
 
 There are two engines here:
 
-- The **gameplay engine** is deterministic code and authored data. It should be playable without an LLM.
-- The **LLM engine** is a future layer that proposes narration, world events, and agent behavior through narrow contracts. It must not become the only way the game works.
+- The **gameplay engine** is deterministic code and authored data — the game,
+  playable without an LLM. It lives in `godot/` and grows slice by slice.
+- The **LLM engine** is a future layer that proposes narration, world events,
+  and agent behavior through narrow contracts ("commands in, events out"). It
+  must not become the only way the game works.
 
-The Godot prototype should prove the core loop first: exploration, authored scenes, choices, combat or conflict resolution, progression, and readable UI. The LLM layer can be built in parallel later, but it should connect through explicit inputs and outputs rather than reaching into Godot internals.
+`godot/` is not a prototype or a throwaway — it is the game. Treat its code,
+authored content, and tests as production.
 
 ## Key Rules
 
 - Prefer a small working vertical slice over broad scaffolding.
-- Keep runtime state and mutation rules deterministic unless a file is explicitly part of the LLM experiment.
-- Keep Godot client code inside `godot/`.
-- Keep agent prompts, tools, world-state files, and scenario tests outside Godot unless there is a concrete integration reason.
-- Do not bulk-edit Godot scenes, resources, or assets without a focused task. Binary and scene churn is hard to review.
-- Use typed GDScript for Godot code unless a stronger reason for C# is documented.
-- Prefer smaller files and more focused folders. Agents should be able to read the complete local context for the thing they are changing.
-- Treat worktrees as optional. Use one main checkout for scene and asset integration; use worktrees mostly for isolated text/code tasks.
-- Do not add dependencies, abstractions, or wrappers before they remove real complexity.
+- Keep runtime state and mutation rules deterministic unless a file is
+  explicitly part of the LLM experiment.
+- Keep Godot client code inside `godot/` — read `godot/AGENTS.md` before
+  working there.
+- Keep agent prompts, tools, world-state files, and scenario tests outside
+  `godot/` unless there is a concrete integration reason.
+- Prefer smaller files and more focused folders. Agents should be able to
+  read the complete local context for the thing they are changing.
+- Treat worktrees as optional. Use one main checkout for scene and asset
+  integration; use worktrees mostly for isolated text/code tasks.
+- Do not add dependencies, abstractions, or wrappers before they remove real
+  complexity.
 
 ## Current Layout
 
@@ -30,22 +40,33 @@ agents/         Future agent definitions and prompts
 tools/          Future deterministic mutation and validation tools
 world-state/    Future canonical world files and templates
 tests/          Future scenario and engine tests
-design/         Current design source of truth
-godot/          Minimal Godot 4.7 project scaffold for the deterministic prototype
-docs/           Handoff and implementation guidance for agents
+design/         Design source of truth (decisions.md is the log of record)
+godot/          The game: Godot 4.7 client + deterministic sim
+docs/           Workflow and implementation guidance for agents
 ```
+
+## Knowledge Layers
+
+- `AGENTS.md` frames a directory; `.context/CONTEXT.md` beside it holds
+  code-local contracts, architecture, and rationale (start:
+  `godot/.context/CONTEXT.md`).
+- Cross-cutting design knowledge — system pages, decision records,
+  vocabulary — lives in the project KB (meridian-managed; `meridian context`
+  shows the path). Repo files stay the source of truth for build contracts;
+  the KB synthesizes and indexes.
 
 ## Anti-Patterns
 
-- Building the LLM runtime before a deterministic playable loop exists.
+- Building the LLM runtime before the deterministic game loop is solid.
 - Letting Godot scenes become the only source of gameplay rules.
-- Adding parallel systems for the same concept, such as separate quest state in Godot and world-state files with no contract between them.
+- Adding parallel systems for the same concept, such as separate quest state
+  in Godot and world-state files with no contract between them.
 - Making every AI task use a full asset worktree.
 - Treating generated UI as finished without opening and playtesting it.
 
 ## Read Next
 
-- `docs/godot-prototype-handoff.md` for the next AI implementation brief.
-- `docs/ai-dev-workflow.md` for branch/worktree and verification rules.
-- `design/pages/implementation-spec.md` for the older LLM-first V0 contract.
-- `design/pages/prototype.md` for the intended first slice of the living RPG.
+- `godot/AGENTS.md` — how to work in the game.
+- `docs/ai-dev-workflow.md` — branch/worktree rules, verification, Godot MCP.
+- `design/pages/decisions.md` — decision log of record.
+- `design/pages/implementation-spec.md` — the V0 LLM-engine contract.
