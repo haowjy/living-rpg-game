@@ -13,7 +13,7 @@ const ENEMY_TEXTURE := preload("res://game/assets/generated/enemy_beast.png")
 var player: Player = null
 var _prompt: Label = null
 var _elapsed := 0.0
-var _active_affordance: CanvasItem = null
+var _active_affordance: Sprite2D = null
 var _ambient_bobs: Array[Sprite2D] = []
 
 
@@ -65,9 +65,9 @@ func _process(delta: float) -> void:
 		return
 	_elapsed += delta
 	_prompt.text = "[E] %s" % player.nearby.prompt if player.nearby != null else ""
-	var next_affordance: CanvasItem = null
+	var next_affordance: Sprite2D = null
 	if player.nearby != null:
-		next_affordance = player.nearby.get_node_or_null("InteractionAffordance") as CanvasItem
+		next_affordance = player.nearby.get_node_or_null("InteractionAffordance") as Sprite2D
 	if next_affordance != _active_affordance:
 		if _active_affordance != null:
 			_active_affordance.visible = false
