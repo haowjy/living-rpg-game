@@ -16,12 +16,14 @@ func setup(heading: String, lines: Array[String], actions: Array[Dictionary]) ->
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(720, 0)
-	panel.position = -panel.custom_minimum_size / 2.0
 	panel.add_theme_stylebox_override("panel", panel_style())
-	add_child(panel)
+	center.add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 18)
 	panel.add_child(column)

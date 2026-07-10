@@ -18,6 +18,7 @@ var debug_overlay: DebugOverlay = null
 var combat_screen: CombatScreen = null
 
 var _mode_root: Node
+var _flow_host: Control
 var _transition: Transition
 var _hints: InputHints
 var _ui_sounds: UiSounds
@@ -29,6 +30,12 @@ var _first_spawn_hint_shown := false
 
 func _ready() -> void:
 	db = ContentDB.new()
+	_flow_host = Control.new()
+	_flow_host.name = "FlowHost"
+	_flow_host.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_flow_host.size = get_viewport().get_visible_rect().size
+	get_viewport().size_changed.connect(_fit_flow_host)
+	add_child(_flow_host)
 	_hints = InputHints.new()
 	add_child(_hints)
 	_ui_sounds = UiSounds.new()
@@ -36,6 +43,10 @@ func _ready() -> void:
 	_transition = Transition.new()
 	add_child(_transition)
 	_show_title(false)
+
+
+func _fit_flow_host() -> void:
+	_flow_host.size = get_viewport().get_visible_rect().size
 
 
 func _input(event: InputEvent) -> void:
@@ -85,7 +96,7 @@ func _show_title(with_fade: bool = true) -> void:
 	screen = Screen.TITLE
 	var title := FlowScreen.new()
 	_mode_root = title
-	add_child(title)
+	_flow_host.add_child(title)
 	title.selected.connect(_on_title_selected)
 	title.setup("<living rpg — demo>",
 			["A living story begins with the road ahead."],
@@ -107,7 +118,7 @@ func _show_opening() -> void:
 	screen = Screen.OPENING
 	var opening := FlowScreen.new()
 	_mode_root = opening
-	add_child(opening)
+	_flow_host.add_child(opening)
 	opening.selected.connect(func(_action: String) -> void: _begin_new_run())
 	opening.setup("The troubled road", [
 		"You are no novice. Years on the road have sharpened your first technique.",
@@ -198,7 +209,7 @@ func _show_ending() -> void:
 	screen = Screen.ENDING
 	var ending := FlowScreen.new()
 	_mode_root = ending
-	add_child(ending)
+	_flow_host.add_child(ending)
 	ending.selected.connect(func(_action: String) -> void: _show_title())
 	ending.setup("Demo complete", [resolution, "The marshal's unanswered offer points down another road."],
 			[{"label": "Return to Title", "id": "title"}])
@@ -211,7 +222,7 @@ func _show_game_over() -> void:
 	screen = Screen.GAME_OVER
 	var game_over := FlowScreen.new()
 	_mode_root = game_over
-	add_child(game_over)
+	_flow_host.add_child(game_over)
 	game_over.selected.connect(func(action: String) -> void:
 		if action == "retry":
 			_retry_run()
