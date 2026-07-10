@@ -103,6 +103,43 @@ func run(t: TestHarness) -> void:
 	open_road.start_new_run("road_b")
 	t.ok(open_road.can_fight("enc_road"), "road fight repeats before reinstatement")
 
+	t.context("Arc A dialogue reachability")
+	for npc_id in ["reeve_f", "mentor_e", "warden_g", "marshal_d"]:
+		t.ok(db.npc(npc_id).display_name.begins_with("<"), "%s keeps a literal placeholder name" % npc_id)
+	t.ok(db.area("hub_a").npc_ids.has("reeve_f"), "reeve is reachable in the hub")
+	t.ok(db.area("hub_a").npc_ids.has("marshal_d"), "marshal is reachable in the hub")
+	t.ok(db.area("road_b").npc_ids.has("mentor_e"), "mentor is reachable on the road")
+	t.ok(db.area("shrine_d").npc_ids.has("warden_g"), "warden is reachable at the shrine")
+	var ceremony := GameState.new(db, 42)
+	ceremony.start_new_run("shrine_d")
+	var no_item_actions: Array = DialogueData.shrine(ceremony)["choices"].map(
+			func(choice: Dictionary) -> String: return String(choice["action"]))
+	t.ok(not no_item_actions.has("choose_spirit"), "ceremony offers no spirit without a contract item")
+	ceremony.inventory["item_spirit_contract"] = 1
+	var ceremony_choices: Array = DialogueData.shrine(ceremony)["choices"]
+	var spirit_ids: Array = []
+	for choice in ceremony_choices:
+		if choice["action"] == "choose_spirit":
+			spirit_ids.append(choice["args"]["spirit_id"])
+	t.eq(spirit_ids, ["spirit_a", "spirit_b", "spirit_c"], "ceremony offers all three spirit choices")
+	var confrontation := GameState.new(db, 42)
+	confrontation.start_new_run("ruin_c")
+	confrontation.set_flag("quest_a_started", true)
+	confrontation.inventory["item_spirit_contract"] = 1
+	confrontation.contract_spirit("spirit_a")
+	var ruin_actions: Array = DialogueData.ruin(confrontation)["choices"].map(
+			func(choice: Dictionary) -> String: return String(choice["action"]))
+	t.ok(ruin_actions.has("fight_encounter"), "ruin offers combat resolution")
+	t.ok(ruin_actions.has("negotiate_ruin"), "ruin offers reinstatement with a spirit")
+	t.ok(ruin_actions.has("take_charter"), "ruin offers charter exposure path")
+	confrontation.take_charter()
+	var stood_down_actions: Array = DialogueData.ruin(confrontation)["choices"].map(
+			func(choice: Dictionary) -> String: return String(choice["action"]))
+	t.ok(not stood_down_actions.has("fight_encounter"), "fight disappears after taking the charter")
+	var reeve_actions: Array = DialogueData.for_npc("reeve_f", confrontation)["choices"].map(
+			func(choice: Dictionary) -> String: return String(choice["action"]))
+	t.ok(reeve_actions.has("expose_charter"), "reeve accepts the unpaid charter")
+
 	t.context("event log")
 	var seqs: Array = exposed.event_log.entries.map(func(e: Dictionary) -> int: return e["seq"])
 	for i in seqs.size():

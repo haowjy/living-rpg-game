@@ -1,6 +1,6 @@
 class_name SpiritDef
 extends Resource
-## Authored definition of a contractable spirit (xianxia spirit-beast pact).
+## Authored definition of a contractable spirit.
 ##
 ## A spirit fights as a party member and has three contract states:
 ## BONDED (passive buff active on its contract holder, Invoke available),

@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "spirit_c"
-display_name = "<ember fox>"
+display_name = "<spirit C; ember fox>"
 element = "ember"
 max_hp = 10
 max_qi = 6

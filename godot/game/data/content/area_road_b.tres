@@ -8,6 +8,6 @@ id = "road_b"
 display_name = "<road B>"
 description = "The trade road between the settlement and the wilds. Beasts prowl it."
 exits = PackedStringArray("hub_a", "ruin_c", "shrine_d")
-npc_ids = PackedStringArray()
+npc_ids = PackedStringArray("mentor_e")
 encounter_id = "enc_road"
 floor_color = Color(0.16, 0.18, 0.14, 1)

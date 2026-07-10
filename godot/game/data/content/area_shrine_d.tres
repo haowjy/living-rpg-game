@@ -8,6 +8,6 @@ id = "shrine_d"
 display_name = "<shrine D>"
 description = "An old roadside shrine. Something is still listening here."
 exits = PackedStringArray("road_b")
-npc_ids = PackedStringArray()
+npc_ids = PackedStringArray("warden_g")
 encounter_id = ""
 floor_color = Color(0.14, 0.17, 0.19, 1)

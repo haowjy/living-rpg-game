@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "spirit_b"
-display_name = "<sprout>"
+display_name = "<spirit B; sprout>"
 element = "wood"
 max_hp = 11
 max_qi = 6

@@ -8,6 +8,6 @@ id = "hub_a"
 display_name = "<hub A>"
 description = "A small settlement holding itself together. People here remember what you do."
 exits = PackedStringArray("road_b", "hub_a_interior")
-npc_ids = PackedStringArray("elder_a", "rival_c")
+npc_ids = PackedStringArray("elder_a", "rival_c", "reeve_f", "marshal_d")
 encounter_id = ""
 floor_color = Color(0.2, 0.19, 0.15, 1)
