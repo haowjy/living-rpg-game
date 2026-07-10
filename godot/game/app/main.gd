@@ -322,7 +322,6 @@ func _start_combat(encounter_id: String) -> void:
 	ui_layer.add_child(combat_screen)
 	combat_screen.finished.connect(_on_combat_finished)
 	combat_screen.start(combat, encounter.intro_text)
-	call_deferred("_focus_first_button", combat_screen)
 
 
 func _on_combat_finished(outcome: int) -> void:
