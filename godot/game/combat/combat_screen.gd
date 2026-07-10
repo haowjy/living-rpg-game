@@ -33,8 +33,16 @@ var _outcome_overlay: Control
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
+	# Main mounts presentation controls directly under a CanvasLayer, which has
+	# no Control rect for anchors to inherit. Size against the viewport instead.
+	size = get_viewport_rect().size
+	get_viewport().size_changed.connect(_fit_viewport)
 	_build_scene()
+
+
+func _fit_viewport() -> void:
+	size = get_viewport_rect().size
 
 
 func start(p_combat: CombatState, intro_text: String) -> void:
@@ -49,6 +57,7 @@ func start(p_combat: CombatState, intro_text: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _outcome_ready and event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
+		_outcome_ready = false
 		finished.emit(combat.outcome)
 		return
 	if not _targeting:
@@ -312,7 +321,7 @@ func _build_scene() -> void:
 	_shake_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_shake_layer)
 
-	var header := _panel(Vector2(38, 28), Vector2(-38, 102), true, false)
+	var header := _panel(Vector2(38, 28), Vector2(-38, 102))
 	_shake_layer.add_child(header)
 	_title = Label.new()
 	_title.position = Vector2(28, 15)
@@ -332,7 +341,7 @@ func _build_scene() -> void:
 	_turn_order.add_theme_color_override("font_color", Color("bcb3be"))
 	header.add_child(_turn_order)
 
-	var stage := _panel(Vector2(38, 116), Vector2(-38, -224), true, true)
+	var stage := _panel(Vector2(38, 116), Vector2(-38, -224))
 	_shake_layer.add_child(stage)
 	var stage_wash := ColorRect.new()
 	stage_wash.color = Color(0.13, 0.16, 0.18, 0.72)
@@ -369,7 +378,7 @@ func _build_scene() -> void:
 	_target_cursor.hide()
 	_shake_layer.add_child(_target_cursor)
 
-	var footer := _panel(Vector2(38, -210), Vector2(-38, -28), false, true)
+	var footer := _panel(Vector2(38, -210), Vector2(-38, -28))
 	_shake_layer.add_child(footer)
 	_message = Label.new()
 	_message.position = Vector2(24, 18)
@@ -394,15 +403,17 @@ func _build_scene() -> void:
 	footer.add_child(_actions)
 
 
-func _panel(top_left: Vector2, bottom_right: Vector2, anchor_bottom: bool, anchor_right: bool) -> NinePatchRect:
+func _panel(top_left: Vector2, bottom_right: Vector2) -> NinePatchRect:
 	var panel := NinePatchRect.new()
 	panel.texture = PANEL
 	panel.patch_margin_left = 12
 	panel.patch_margin_top = 12
 	panel.patch_margin_right = 12
 	panel.patch_margin_bottom = 12
-	panel.position = top_left
-	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	panel.anchor_left = 0.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 1.0 if top_left.y < 0.0 else 0.0
+	panel.anchor_bottom = 1.0 if bottom_right.y < 0.0 else 0.0
 	panel.offset_left = top_left.x
 	panel.offset_top = top_left.y
 	panel.offset_right = bottom_right.x

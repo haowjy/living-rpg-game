@@ -23,7 +23,7 @@ var _panel: NinePatchRect
 
 func setup(p_combatant: Combatant) -> void:
 	combatant = p_combatant
-	custom_minimum_size = Vector2(236, 154 if combatant.is_enemy else 174)
+	custom_minimum_size = Vector2(274, 154 if combatant.is_enemy else 174)
 	_build()
 	refresh(false)
 
@@ -59,7 +59,7 @@ func _build() -> void:
 
 	var details := VBoxContainer.new()
 	details.position = Vector2(94, 25)
-	details.size = Vector2(132, 128)
+	details.size = Vector2(170, 128)
 	details.add_theme_constant_override("separation", 2)
 	add_child(details)
 
@@ -126,7 +126,18 @@ func _combatant_texture() -> Texture2D:
 	var asset_id := combatant.id.get_slice("#", 0)
 	var path := "res://game/assets/generated/%s_%s.png" % [
 		"enemy" if combatant.is_enemy else "char", asset_id]
-	var texture := load(path) as Texture2D
+	var texture := load(path) as Texture2D if ResourceLoader.exists(path) else null
+	# The authored placeholder ids predate their descriptive generated filenames.
+	# Keep the contract path primary, then bridge those few known placeholders.
+	if texture == null:
+		var placeholder_assets := {
+			"companion_a": "char_companion.png",
+			"monster_a": "enemy_beast.png",
+			"monster_b": "enemy_bandit.png",
+			"monster_b_leader": "enemy_bandit_leader.png",
+		}
+		if placeholder_assets.has(asset_id):
+			texture = load("res://game/assets/generated/%s" % placeholder_assets[asset_id]) as Texture2D
 	if texture == null:
 		return null
 	if combatant.is_enemy:
