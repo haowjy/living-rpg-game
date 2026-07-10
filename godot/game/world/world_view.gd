@@ -7,14 +7,22 @@ signal interacted(kind: String, target_id: String)
 const TILE_SIZE := 32
 const PLAYER_SCENE := preload("res://game/actors/player.tscn")
 const MAP_DIRECTORY := "res://game/data/content/maps/"
+const PROMPT_TEXTURE := preload("res://game/assets/generated/ui/prompt_e.png")
+const ENEMY_TEXTURE := preload("res://game/assets/generated/enemy_beast.png")
 
 var player: Player = null
 var _prompt: Label = null
+var _elapsed := 0.0
+var _active_affordance: CanvasItem = null
+var _ambient_bobs: Array[Sprite2D] = []
 
 
 func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
+	_active_affordance = null
+	_ambient_bobs.clear()
 
 	y_sort_enabled = true
 	var site := _load_site(area.id)
@@ -46,15 +54,33 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	player = PLAYER_SCENE.instantiate()
 	player.position = _tile_center(spawn_tile)
 	add_child(player)
+	_start_npc_brains()
 	_add_camera(player, map_size)
 	_add_boundary(map_size)
 	_add_prompt()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player == null or _prompt == null:
 		return
+	_elapsed += delta
 	_prompt.text = "[E] %s" % player.nearby.prompt if player.nearby != null else ""
+	var next_affordance: CanvasItem = null
+	if player.nearby != null:
+		next_affordance = player.nearby.get_node_or_null("InteractionAffordance") as CanvasItem
+	if next_affordance != _active_affordance:
+		if _active_affordance != null:
+			_active_affordance.visible = false
+		_active_affordance = next_affordance
+		if _active_affordance != null:
+			_active_affordance.visible = true
+	if _active_affordance != null:
+		_active_affordance.position.y = -44.0 + sin(_elapsed * 5.0) * 3.0
+		var pulse := 0.82 + sin(_elapsed * 5.0) * 0.12
+		_active_affordance.modulate = Color(1.0, 1.0, 1.0, pulse)
+	for sprite in _ambient_bobs:
+		if is_instance_valid(sprite):
+			sprite.position.y = -10.0 + sin(_elapsed * 2.4) * 2.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -109,8 +135,8 @@ func _add_placement(placement: Dictionary, db: ContentDB, gs: GameState) -> void
 		"npc":
 			var npc := db.npc(target_id)
 			prompt = "talk to %s" % npc.display_name
-			label = npc.display_name
-			color = npc.body_color
+			_add_npc(position, target_id, prompt, npc.body_color)
+			return
 		"exit":
 			var destination := db.area(target_id)
 			prompt = "travel to %s" % destination.display_name
@@ -130,29 +156,96 @@ func _add_placement(placement: Dictionary, db: ContentDB, gs: GameState) -> void
 			color = Color(0.3, 0.5, 0.55, 0.75)
 	var node := Interactable.create(kind, target_id, prompt, position, color, label, size)
 	add_child(node)
-	if kind == "npc":
-		_add_npc_sprite(node, target_id)
+	_add_affordance(node)
+	if kind == "fight":
+		_add_enemy_sprite(node)
 
 
-func _add_npc_sprite(node: Interactable, npc_id: String) -> void:
+func _add_npc(position: Vector2, npc_id: String, prompt: String, color: Color) -> void:
 	var path := "res://game/assets/generated/char_%s.png" % npc_id
 	if not ResourceLoader.exists(path):
 		# Authored NPC ids carry a story suffix (reeve_f); sheets are named for
 		# the readable role (char_reeve.png).
 		path = "res://game/assets/generated/char_%s.png" % npc_id.get_slice("_", 0)
-	if not ResourceLoader.exists(path):
-		return
+	var texture: Texture2D = load(path) if ResourceLoader.exists(path) else null
+	var body := NpcBody.new()
+	body.name = "NPC_%s" % npc_id
+	body.position = position
+	body.setup(npc_id, texture, color)
+	body.dialogue_allowed = _npc_can_initiate_dialogue
+	body.wants_dialogue.connect(func(id: String) -> void: interacted.emit("npc", id))
+	add_child(body)
+
+	var interaction := Interactable.create("npc", npc_id, prompt, Vector2.ZERO,
+			Color.TRANSPARENT, "", Vector2(34, 38))
+	interaction.name = "Interaction"
+	for child in interaction.get_children():
+		if child is Polygon2D or child is Label:
+			child.visible = false
+	body.add_child(interaction)
+	_add_affordance(interaction)
+
+	var brain := NpcBrain.new()
+	brain.name = "Brain"
+	body.add_child(brain)
+	var points := PackedVector2Array([
+		position + Vector2(-TILE_SIZE, 0),
+		position,
+		position + Vector2(TILE_SIZE, 0),
+	])
+	# rival_c is the vertical-slice showcase: it approaches the player once,
+	# then asks for dialogue through the same interaction signal as manual talk.
+	var showcase_target: Node2D = player if npc_id == "rival_c" else null
+	# Player is added after placements. Setup showcase brains once build completes.
+	brain.set_meta("npc_waypoints", points)
+	brain.set_meta("npc_seed", npc_id.hash())
+	brain.set_meta("showcase", npc_id == "rival_c")
+
+
+func _start_npc_brains() -> void:
+	for child in get_children():
+		if child is not NpcBody:
+			continue
+		var body := child as NpcBody
+		var brain := body.get_node("Brain") as NpcBrain
+		var showcase_target: Node2D = player if bool(brain.get_meta("showcase")) else null
+		brain.setup(body, brain.get_meta("npc_waypoints"),
+				int(brain.get_meta("npc_seed")), showcase_target)
+
+
+func _add_enemy_sprite(node: Interactable) -> void:
 	for child in node.get_children():
-		if child is Polygon2D:
+		if child is Polygon2D or child is Label:
 			child.visible = false
 	var sprite := Sprite2D.new()
-	sprite.texture = load(path)
-	sprite.hframes = 4
-	sprite.vframes = 4
-	sprite.frame_coords = Vector2i(0, 0)
+	sprite.name = "EnemyBeast"
+	sprite.texture = ENEMY_TEXTURE
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale = Vector2(0.72, 0.72)
-	sprite.position.y = -10
+	sprite.position.y = -10.0
 	node.add_child(sprite)
+	_ambient_bobs.append(sprite)
+
+
+func _add_affordance(node: Interactable) -> void:
+	var icon := Sprite2D.new()
+	icon.name = "InteractionAffordance"
+	icon.texture = PROMPT_TEXTURE
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.position.y = -44.0
+	icon.scale = Vector2(0.55, 0.55)
+	icon.visible = false
+	icon.z_index = 20
+	node.add_child(icon)
+
+
+func _npc_can_initiate_dialogue() -> bool:
+	var host := get_parent()
+	if host == null:
+		return false
+	var active_dialogue: Variant = host.get("dialogue")
+	var active_combat: Variant = host.get("combat_screen")
+	return (active_dialogue == null or not active_dialogue.visible) and active_combat == null
 
 
 func _add_camera(target: Node2D, map_size: Vector2i) -> void:
