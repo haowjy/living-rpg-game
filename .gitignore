@@ -19,6 +19,7 @@ world-state/runtime/
 .pi/
 .cursor/
 .mars/
+mars.lock
 
 # Godot editor/import cache
 .godot/
