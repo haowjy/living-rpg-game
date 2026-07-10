@@ -139,8 +139,6 @@ func _tile_base(atlas: Image, index: int, base: Color, light: Color, dark: Color
 			var roll := _hash(x, y, index) % 100
 			if roll < density:
 				_pixel(atlas, origin.x + x, origin.y + y, light if roll % 3 else dark)
-	# Ground-tile edge shading is restrained so adjacent cells still tile cleanly.
-	_hline(atlas, origin.x, origin.y + 31, 32, dark)
 	return origin
 
 

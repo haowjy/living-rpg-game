@@ -32,6 +32,7 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	var ground := TileMapLayer.new()
 	ground.name = "Ground"
 	ground.tile_set = tile_set
+	ground.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ground.z_index = -100
 	ground.y_sort_enabled = false
 	add_child(ground)
@@ -40,6 +41,7 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	var overlay := TileMapLayer.new()
 	overlay.name = "Overlay"
 	overlay.tile_set = tile_set
+	overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	overlay.z_index = 0
 	overlay.y_sort_enabled = true
 	# Tile sort points align with actors positioned at tile centers.
