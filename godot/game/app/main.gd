@@ -64,15 +64,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			debug_overlay.toggle()
 
 
-func _process(_delta: float) -> void:
-	if screen != Screen.OVERWORLD or world == null or world.player == null or dialogue == null:
-		return
-	if _interaction_hint != null:
-		var nearby = world.player.nearby
-		_interaction_hint.text = ("[%s] %s" % [_hints.confirm_label(), nearby.prompt]
-				if nearby != null and not dialogue.visible else "")
-
-
 ## --- Screen routing ---------------------------------------------------------
 
 func _show_title(with_fade: bool = true) -> void:
@@ -299,11 +290,13 @@ func _on_choice(action: String, args: Dictionary) -> void:
 func _open_dialogue(prompt: Dictionary) -> void:
 	world.process_mode = Node.PROCESS_MODE_DISABLED
 	dialogue.open(prompt)
+	_refresh_interaction_hint()
 
 
 func _close_dialogue() -> void:
 	dialogue.close()
 	world.process_mode = Node.PROCESS_MODE_INHERIT
+	_refresh_interaction_hint()
 
 
 func _open_message(title: String, text: String) -> void:
@@ -358,11 +351,17 @@ func _on_combat_finished(outcome: int) -> void:
 
 func _rebuild_world() -> void:
 	world.build(db.area(gs.current_area_id), db, gs)
-	# WorldView's legacy prompt remains part of its contract; the router renders
-	# the device-aware version instead.
-	await get_tree().process_frame
-	if world != null and is_instance_valid(world._prompt):
-		world._prompt.hide()
+	world.player.nearby_changed.connect(func(_nearby: Interactable) -> void:
+		_refresh_interaction_hint())
+	_refresh_interaction_hint()
+
+
+func _refresh_interaction_hint() -> void:
+	if _interaction_hint == null or world == null or world.player == null:
+		return
+	var nearby := world.player.nearby
+	_interaction_hint.text = ("[%s] %s" % [_hints.confirm_label(), nearby.prompt]
+			if nearby != null and dialogue != null and not dialogue.visible else "")
 
 
 func _show_first_spawn_hint() -> void:

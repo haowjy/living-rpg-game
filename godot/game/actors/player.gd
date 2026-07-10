@@ -5,6 +5,8 @@ extends CharacterBody2D
 
 const MOVE_SPEED := 176.0
 
+signal nearby_changed(interactable: Interactable)
+
 ## The Interactable currently in range, or null.
 var nearby: Interactable = null
 
@@ -30,6 +32,7 @@ func face_toward(target_position: Vector2) -> void:
 
 
 func _on_zone_changed(_area: Area2D) -> void:
+	var previous := nearby
 	nearby = null
 	var best_distance := INF
 	for area in _zone.get_overlapping_areas():
@@ -38,3 +41,5 @@ func _on_zone_changed(_area: Area2D) -> void:
 			if distance < best_distance:
 				best_distance = distance
 				nearby = area
+	if nearby != previous:
+		nearby_changed.emit(nearby)

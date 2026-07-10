@@ -11,7 +11,6 @@ const PROMPT_TEXTURE := preload("res://game/assets/generated/ui/prompt_e.png")
 const ENEMY_TEXTURE := preload("res://game/assets/generated/enemy_beast.png")
 
 var player: Player = null
-var _prompt: Label = null
 var _elapsed := 0.0
 var _active_affordance: Sprite2D = null
 var _ambient_bobs: Array[Sprite2D] = []
@@ -62,14 +61,12 @@ func build(area: AreaDef, db: ContentDB, gs: GameState) -> void:
 	_start_npc_brains()
 	_add_camera(player, map_size)
 	_add_boundary(map_size)
-	_add_prompt()
 
 
 func _process(delta: float) -> void:
-	if player == null or _prompt == null:
+	if player == null:
 		return
 	_elapsed += delta
-	_prompt.text = "[E] %s" % player.nearby.prompt if player.nearby != null else ""
 	var next_affordance: Sprite2D = null
 	if player.nearby != null:
 		next_affordance = player.nearby.get_node_or_null("InteractionAffordance") as Sprite2D
@@ -293,16 +290,6 @@ func _add_boundary(map_size: Vector2i) -> void:
 		shape.shape = rectangle
 		bounds.add_child(shape)
 	add_child(bounds)
-
-
-func _add_prompt() -> void:
-	var canvas := CanvasLayer.new()
-	canvas.layer = 10
-	_prompt = Label.new()
-	_prompt.position = Vector2(24, 840)
-	_prompt.add_theme_font_size_override("font_size", 22)
-	canvas.add_child(_prompt)
-	add_child(canvas)
 
 
 func _tile_center(tile: Vector2i) -> Vector2:
