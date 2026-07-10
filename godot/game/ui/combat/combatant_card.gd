@@ -94,12 +94,12 @@ func refresh(is_current: bool) -> void:
 		Color.WHITE if combatant.is_alive() else Color("887f83"))
 	_hp_label.text = "HP  %d / %d" % [combatant.hp(), combatant.max_hp]
 	_hp_bar.set_meter(combatant.hp(), combatant.max_hp)
-	var show_qi := not combatant.is_enemy and not combatant.is_spirit() and combatant.max_qi > 0
+	var show_qi := not combatant.is_enemy and not combatant.is_spirit() and combatant.actor.max_qi > 0
 	_qi_label.visible = show_qi
 	_qi_bar.visible = show_qi
 	if show_qi:
-		_qi_label.text = "QI  %d / %d" % [combatant.qi(), combatant.max_qi]
-		_qi_bar.set_meter(combatant.qi(), combatant.max_qi, true)
+		_qi_label.text = "QI  %d / %d" % [combatant.qi(), combatant.actor.max_qi]
+		_qi_bar.set_meter(combatant.qi(), combatant.actor.max_qi, true)
 	_rebuild_badges()
 	modulate = Color.WHITE if combatant.is_alive() else Color(0.55, 0.55, 0.58, 0.8)
 
