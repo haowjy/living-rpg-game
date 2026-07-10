@@ -16,7 +16,9 @@ Reference depth for `godot/`. Read [`../AGENTS.md`](../AGENTS.md) first.
 
 Invariants (tests enforce the first two):
 
-- Same seed + same command sequence ⇒ byte-identical event log.
+- Same seed + same command sequence ⇒ byte-identical event log (assumes the
+  same build and content — the general form is same initial state + same
+  inputs + same code/data).
 - Every state mutation goes through a command; no presentation writes.
 - Event log entries stay plain dictionaries — never Resources. The outward
   contract must be trivially serializable and carry no code-execution
@@ -40,8 +42,9 @@ scene instantiation.
 
 ## Rationale
 
-- **RefCounted sim, not Nodes**: official "avoid nodes for everything"
-  guidance + MVC-in-Godot practice; makes the sim unit-testable headless.
+- **RefCounted sim, not Nodes**: supported by Godot's official "node
+  alternatives" guidance; an idiomatic pattern for data-driven projects
+  (not a canonical standard), and it makes the sim unit-testable headless.
 - **`.tres` for authored content, dictionaries for events**: content wants
   typed editor authoring and git-diffable text; the event log wants zero
   trust surface. Resource loading is only a security concern for untrusted
@@ -50,7 +53,10 @@ scene instantiation.
 - **Zero-dependency test runner over GUT**: the sim needs only assertions;
   GUT's ~200 files weren't worth vendoring. Its `godot_4_7` branch is the
   pick if scene-testing needs grow.
-- **Godot floats/physics are not deterministic** — keep them out of the sim.
+- **Integer math over floats**: Godot physics is documented
+  non-deterministic, and float determinism is fragile across
+  platforms/compilers. Floats can be deterministic under controlled
+  conditions; integers remove the risk instead of managing it.
 
 ## Patterns
 
