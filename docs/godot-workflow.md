@@ -28,10 +28,23 @@ Use this split:
 ```text
 godot/assets/            tracked runtime assets, branch-owned
 godot/external_assets/   ignored local shared asset mount
-art-source/              future source art, likely LFS or separate storage
+art-source/              future source art, outside git (cloud or separate storage)
 ```
 
 Only symlink assets that are intentionally shared and read-only. Do not symlink tracked branch-specific assets wholesale.
+
+## Git LFS
+
+Not used (decided 2026-07-10, verified against GitHub billing docs and Godot
+guidance). Game-ready 2D exports stay in plain git; source masters
+(PSD/Aseprite/Blender/audio) stay out of the repo entirely.
+
+Revisit only when a file class is both large and frequently revised, or the
+repo approaches GitHub's practical limits (50 MiB/file warning, 100 MiB
+block, ~1 GB repo guidance). If adopted: track selectively by extension via
+`.gitattributes`, never blanket; every agent/CI download of LFS objects
+bills against the 10 GB/month bandwidth quota, and worktrees need
+`git lfs install --worktree`.
 
 ## Godot MCP
 
