@@ -45,8 +45,14 @@ func _build() -> void:
 	_turn_marker = Label.new()
 	_turn_marker.text = "TURN"
 	_turn_marker.position = Vector2(12, 9)
-	_turn_marker.add_theme_color_override("font_color", Color("f3d57a"))
+	_turn_marker.add_theme_color_override("font_color", Color("fff0c2"))
 	_turn_marker.add_theme_font_size_override("font_size", 12)
+	var marker_chip := StyleBoxFlat.new()
+	marker_chip.bg_color = Color("3c333e")
+	marker_chip.border_color = Color("c5984c")
+	marker_chip.set_border_width_all(1)
+	marker_chip.set_content_margin_all(4)
+	_turn_marker.add_theme_stylebox_override("normal", marker_chip)
 	add_child(_turn_marker)
 
 	sprite = TextureRect.new()

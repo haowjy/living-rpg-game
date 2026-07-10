@@ -342,6 +342,14 @@ func _build_scene() -> void:
 
 	var header := _panel(Vector2(38, 28), Vector2(-38, 102))
 	_shake_layer.add_child(header)
+	var header_band := ColorRect.new()
+	header_band.color = Color("29262e")
+	header_band.position = Vector2(14, 11)
+	header_band.set_anchors_preset(Control.PRESET_FULL_RECT)
+	header_band.offset_right = -14
+	header_band.offset_bottom = -11
+	header_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(header_band)
 	_title = Label.new()
 	_title.position = Vector2(28, 15)
 	_title.add_theme_font_size_override("font_size", 25)
@@ -350,6 +358,7 @@ func _build_scene() -> void:
 	_round_label = Label.new()
 	_round_label.position = Vector2(28, 48)
 	_round_label.add_theme_font_size_override("font_size", 14)
+	_round_label.add_theme_color_override("font_color", Color("d8cdbd"))
 	header.add_child(_round_label)
 	_turn_order = Label.new()
 	_turn_order.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -357,7 +366,13 @@ func _build_scene() -> void:
 	_turn_order.size = Vector2(620, 32)
 	_turn_order.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_turn_order.add_theme_font_size_override("font_size", 14)
-	_turn_order.add_theme_color_override("font_color", Color("bcb3be"))
+	_turn_order.add_theme_color_override("font_color", Color("fff0c2"))
+	var turn_chip := StyleBoxFlat.new()
+	turn_chip.bg_color = Color("453c49")
+	turn_chip.border_color = Color("756779")
+	turn_chip.set_border_width_all(1)
+	turn_chip.set_content_margin_all(7)
+	_turn_order.add_theme_stylebox_override("normal", turn_chip)
 	header.add_child(_turn_order)
 
 	var stage := _panel(Vector2(38, 116), Vector2(-38, -224))
