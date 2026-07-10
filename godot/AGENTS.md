@@ -48,15 +48,11 @@ addons/godot_ai/   Editor MCP bridge — dev tooling only, never a runtime
   all sim randomness flows through the one seeded RNG service; no
   `Time`/physics reads in sim code. Same seed + same commands must produce
   an identical event log — a test enforces this.
-- Keep the headless suite green and extend it with every new sim rule:
-  ```bash
-  godot --headless --path godot --quit                      # boots clean
-  godot --headless --path godot -s res://tests/run_tests.gd # suite green
-  ```
+- Keep the headless suite green and extend it with every new sim rule
+  (commands: [`PLAYTEST.md`](PLAYTEST.md)).
 - Use typed GDScript. Commit editor-generated `.uid` files with their scripts.
-- Prefer one complete vertical slice over broad framework scaffolding.
-- Prefer smaller files and focused folders; keep scripts close to what they
-  serve. No global autoloads or manager classes until a concrete need exists.
+- Keep scripts close to the scenes/resources they serve. No global autoloads
+  or manager classes until a concrete need exists.
 - Do not bulk-edit scenes, resources, or assets without a focused task —
   binary and scene churn is hard to review.
 - Keep branch-owned runtime assets in `assets/`; ignored `external_assets/`
