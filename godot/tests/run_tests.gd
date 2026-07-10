@@ -2,7 +2,7 @@ extends SceneTree
 ## Headless sim-test runner (no addon needed).
 ##
 ## Run from the repo root:
-##   godot --headless --path godot -s res://tests/run_tests.gd
+##   godot/tests/run_headless.sh
 ## Exits 0 when green, 1 when any assertion failed.
 
 const TEST_SCRIPTS: Array[String] = [
@@ -18,11 +18,14 @@ const TEST_SCRIPTS: Array[String] = [
 func _initialize() -> void:
 	var harness := TestHarness.new()
 	for path in TEST_SCRIPTS:
-		var script: GDScript = load(path)
+		var script := load(path) as GDScript
 		if script == null:
-			harness.failures.append("could not load %s" % path)
+			harness.ok(false, "could not load %s" % path)
 			continue
-		var test: RefCounted = script.new()
+		var test: Object = script.new()
+		if not test.has_method("run"):
+			harness.ok(false, "%s has no run method" % path)
+			continue
 		print("running %s" % path)
 		test.run(harness)
 	print("")

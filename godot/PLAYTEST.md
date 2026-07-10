@@ -6,8 +6,8 @@
 # Verify the project boots headless (no errors expected):
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot --quit
 
-# Run the sim test suite (exits 0 when green):
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path godot -s res://tests/run_tests.gd
+# Run the checked sim test suite (authoritative; exits 0 when green):
+GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot godot/tests/run_headless.sh
 
 # Play:
 /Applications/Godot.app/Contents/MacOS/Godot --path godot
