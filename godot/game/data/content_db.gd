@@ -14,6 +14,7 @@ var enemies: Dictionary = {}
 var areas: Dictionary = {}
 var npcs: Dictionary = {}
 var encounters: Dictionary = {}
+var items: Dictionary = {}
 
 
 func _init() -> void:
@@ -49,6 +50,8 @@ func _register(res: Resource) -> void:
 		_index(npcs, res, res.id)
 	elif res is EncounterDef:
 		_index(encounters, res, res.id)
+	elif res is ItemDef:
+		_index(items, res, res.id)
 	else:
 		push_error("ContentDB: unknown resource type: %s" % res)
 
@@ -87,3 +90,8 @@ func npc(id: String) -> NpcDef:
 func encounter(id: String) -> EncounterDef:
 	assert(encounters.has(id), "Unknown encounter id: %s" % id)
 	return encounters[id]
+
+
+func item(id: String) -> ItemDef:
+	assert(items.has(id), "Unknown item id: %s" % id)
+	return items[id]

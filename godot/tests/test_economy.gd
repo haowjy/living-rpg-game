@@ -50,3 +50,73 @@ func run(t: TestHarness) -> void:
 	t.eq(away.player().hp, 3, "rejected rest does not restore HP")
 	t.eq(away.event_log.entries[-1]["type"], "command_rejected",
 			"rejected rest is logged")
+
+	t.context("buy")
+	var shopper := GameState.new(db, 42)
+	shopper.start_new_run("hub_a")
+	shopper.gold = 30
+	var bought := shopper.buy("salve")
+	t.ok(bought["ok"], "buying goods from a present merchant succeeds")
+	t.eq(shopper.gold, 24, "buying deducts the item price")
+	t.eq(shopper.inventory.get("salve", 0), 1, "buying adds one item")
+	t.eq(shopper.event_log.entries[-1]["type"], "item_bought", "buying is logged")
+	t.eq(shopper.event_log.entries[-1]["data"]["item_id"], "salve",
+			"buy event identifies the item")
+
+	shopper.gold = 0
+	var poor := shopper.buy("salve")
+	t.ok(not poor["ok"], "buying with insufficient gold is rejected")
+	t.eq(shopper.inventory.get("salve", 0), 1,
+			"rejected purchase does not add inventory")
+	t.eq(shopper.event_log.entries[-1]["type"], "command_rejected",
+			"rejected purchase is logged")
+
+	var remote := GameState.new(db, 42)
+	remote.start_new_run("road_b")
+	remote.gold = 30
+	var no_merchant := remote.buy("salve")
+	t.ok(not no_merchant["ok"], "buying without a present merchant is rejected")
+	t.eq(remote.gold, 30, "rejected remote purchase does not deduct gold")
+	t.eq(remote.event_log.entries[-1]["type"], "command_rejected",
+			"remote purchase rejection is logged")
+
+	t.context("sell")
+	shopper.inventory["salve"] = 2
+	shopper.gold = 0
+	var sold := shopper.sell("salve")
+	t.ok(sold["ok"], "selling an owned item succeeds")
+	t.eq(shopper.gold, 3, "selling refunds half the price with integer math")
+	t.eq(shopper.inventory["salve"], 1, "selling decrements inventory")
+	t.eq(shopper.event_log.entries[-1]["type"], "item_sold", "selling is logged")
+	t.eq(shopper.event_log.entries[-1]["data"]["refund"], 3,
+			"sell event carries the refund")
+
+	t.context("use item")
+	var user := GameState.new(db, 42)
+	user.start_new_run("hub_a")
+	user.inventory["salve"] = 1
+	user.player().hp = user.player().max_hp - 3
+	var used := user.use_item("salve")
+	t.ok(used["ok"], "using a consumable succeeds")
+	t.eq(user.player().hp, user.player().max_hp, "consumable healing clamps to max HP")
+	t.eq(user.inventory["salve"], 0, "using a consumable decrements inventory")
+	t.eq(user.event_log.entries[-1]["type"], "item_used", "using an item is logged")
+	t.eq(user.event_log.entries[-1]["data"]["heal_hp"], 3,
+			"item event carries actual healing")
+
+	user.inventory["spirit_contract"] = 1
+	var inert := user.use_item("spirit_contract")
+	t.ok(not inert["ok"], "using a spirit contract away from its destination is rejected")
+	t.eq(inert["error"], "Nothing happens here.", "spirit contract rejection is explicit")
+	t.eq(user.inventory["spirit_contract"], 1,
+			"rejected spirit contract use does not consume it")
+	t.eq(user.event_log.entries[-1]["type"], "command_rejected",
+			"rejected spirit contract use is logged")
+
+	t.context("consume seam")
+	user.inventory["salve"] = 2
+	t.ok(user._consume_item("salve"), "consume helper reports an owned item")
+	t.eq(user.inventory["salve"], 1, "consume helper decrements an owned item")
+	t.ok(not user._consume_item("missing"), "consume helper rejects an absent item")
+	t.eq(user.inventory.get("missing", 0), 0,
+			"consume helper does not create an absent inventory entry")

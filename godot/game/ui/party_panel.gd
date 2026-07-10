@@ -15,6 +15,7 @@ func _ready() -> void:
 func refresh(gs: GameState) -> void:
 	var lines := PackedStringArray()
 	lines.append("[b]Day %d — %s[/b]" % [gs.day, gs.time_of_day_name()])
+	lines.append("Gold: %d" % gs.gold)
 	for actor in gs.party:
 		var line := "[b]%s[/b]  HP %d/%d" % [actor.display_name, actor.hp, actor.max_hp]
 		if actor.max_qi > 0 and not actor.is_spirit():
