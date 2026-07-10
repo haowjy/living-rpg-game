@@ -11,7 +11,7 @@ func _ready() -> void:
 	layer = 100
 	_veil = ColorRect.new()
 	_veil.color = Color(0.025, 0.03, 0.04, 0.0)
-	_veil.mouse_filter = Control.MOUSE_FILTER_STOP
+	_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_veil.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_veil)
 

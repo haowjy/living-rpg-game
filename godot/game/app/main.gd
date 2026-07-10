@@ -208,8 +208,8 @@ func _show_game_over() -> void:
 		else:
 			_show_title())
 	game_over.setup("The party has fallen", ["The road grows quiet, but this need not be the final telling."], [
-		{"label": "Retry from <hub A>", "id": "retry"},
 		{"label": "Return to Title", "id": "title"},
+		{"label": "Retry from <hub A>", "id": "retry"},
 	])
 	await _end_transition()
 

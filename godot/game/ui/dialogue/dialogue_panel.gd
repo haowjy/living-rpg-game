@@ -18,13 +18,14 @@ var _reveal_progress := 0.0
 var _reveal_speed := FAST_REVEAL
 var _prompt: Dictionary = {}
 var _input_hints: InputHints
+var _choice_committed := false
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	offset_left = 72
 	offset_right = -72
-	offset_top = -310
+	offset_top = -420
 	offset_bottom = -36
 	add_theme_stylebox_override("panel", FlowScreen.panel_style())
 	var column := VBoxContainer.new()
@@ -54,6 +55,7 @@ func attach_hints(hints: InputHints) -> void:
 
 func open(prompt: Dictionary) -> void:
 	_prompt = prompt
+	_choice_committed = false
 	_title.text = String(prompt.get("title", ""))
 	_lines = prompt.get("lines", [])
 	if _lines.is_empty():
@@ -120,7 +122,11 @@ func _show_choices() -> void:
 		button.text = String(choice.get("label", "..."))
 		var action := String(choice.get("action", "close"))
 		var args: Dictionary = choice.get("args", {})
-		button.pressed.connect(func() -> void: choice_made.emit(action, args))
+		button.pressed.connect(func() -> void:
+			if _choice_committed:
+				return
+			_choice_committed = true
+			choice_made.emit(action, args))
 		_choices.add_child(button)
 	_refresh_hint()
 	await get_tree().process_frame

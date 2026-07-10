@@ -6,6 +6,8 @@ signal selected(action: String)
 
 const PANEL_TEXTURE := preload("res://game/assets/generated/ui/panel.png")
 
+var _committed := false
+
 
 func setup(heading: String, lines: Array[String], actions: Array[Dictionary]) -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -39,7 +41,11 @@ func setup(heading: String, lines: Array[String], actions: Array[Dictionary]) ->
 		var button := Button.new()
 		button.text = String(action.label)
 		var action_id := String(action.id)
-		button.pressed.connect(func() -> void: selected.emit(action_id))
+		button.pressed.connect(func() -> void:
+			if _committed:
+				return
+			_committed = true
+			selected.emit(action_id))
 		column.add_child(button)
 	if not actions.is_empty():
 		await get_tree().process_frame
