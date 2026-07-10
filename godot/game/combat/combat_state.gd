@@ -134,9 +134,13 @@ func perform(command: Dictionary) -> Array[Dictionary]:
 				return [_reject("Invoke is not available.")]
 			events.append_array(_invoke(c))
 		"guard":
-			c.add_status("guard", 2)
+			var guard_stacks := 2
+			var bonded_spirit := _bonded_spirit_for(c)
+			if bonded_spirit != null and bonded_spirit.passive_kind == "guard_on_guard":
+				guard_stacks += bonded_spirit.passive_amount
+			c.add_status("guard", guard_stacks)
 			events.append(_log("status_applied", "%s guards." % c.display_name,
-					{"target_id": c.id, "status": "guard", "stacks": 2}))
+					{"target_id": c.id, "status": "guard", "stacks": guard_stacks}))
 		"flee":
 			outcome = Outcome.FLED
 			events.append(_log("fled", "The party fled the battle.", {}))
@@ -230,33 +234,40 @@ func _invoke(c: Combatant) -> Array[Dictionary]:
 	var def := c.actor.spirit.def
 	events.append(_log("spirit_invoked", "%s invokes %s!" % [c.display_name, def.invoke_name],
 			{"spirit_id": def.id}))
-	var targets: Array[Combatant] = []
-	if def.invoke_hits_all:
-		targets = _living(enemies)
+	if def.invoke_kind == "party_guard_cleanse":
+		for member in party:
+			member.add_status("guard", 1)
+			member.decrement_status("burn", member.status("burn"))
+			events.append(_log("status_applied", "%s gains 1 guard." % member.display_name,
+					{"target_id": member.id, "status": "guard", "stacks": 1}))
 	else:
-		var single := _lowest_hp(enemies)
-		if single != null:
-			targets = [single]
-	for target in targets:
-		var broke := Damage.apply_break(def.element, 2, target)
-		var dealt := Damage.apply_hit(def.invoke_power, 0, target)
-		events.append(_log("damage_dealt",
-				"%s hits %s for %d." % [def.invoke_name, target.display_name, dealt],
-				{"attacker_id": c.id, "target_id": target.id, "amount": dealt}))
-		if broke:
-			events.append(_log("break_triggered",
-					"%s is broken by %s!" % [target.display_name, def.element],
-					{"target_id": target.id, "element": def.element}))
-		if def.invoke_status != "" and target.is_alive():
-			target.add_status(def.invoke_status, def.invoke_status_stacks)
-			events.append(_log("status_applied",
-					"%s gains %d %s." % [target.display_name,
-						def.invoke_status_stacks, def.invoke_status],
-					{"target_id": target.id, "status": def.invoke_status,
-						"stacks": def.invoke_status_stacks}))
-		if not target.is_alive():
-			events.append(_log("actor_downed", "%s falls." % target.display_name,
-					{"actor_id": target.id}))
+		var targets: Array[Combatant] = []
+		if def.invoke_hits_all:
+			targets = _living(enemies)
+		else:
+			var single := _lowest_hp(enemies)
+			if single != null:
+				targets = [single]
+		for target in targets:
+			var broke := Damage.apply_break(def.element, 2, target)
+			var dealt := Damage.apply_hit(def.invoke_power, 0, target)
+			events.append(_log("damage_dealt",
+					"%s hits %s for %d." % [def.invoke_name, target.display_name, dealt],
+					{"attacker_id": c.id, "target_id": target.id, "amount": dealt}))
+			if broke:
+				events.append(_log("break_triggered",
+						"%s is broken by %s!" % [target.display_name, def.element],
+						{"target_id": target.id, "element": def.element}))
+			if def.invoke_status != "" and target.is_alive():
+				target.add_status(def.invoke_status, def.invoke_status_stacks)
+				events.append(_log("status_applied",
+						"%s gains %d %s." % [target.display_name,
+							def.invoke_status_stacks, def.invoke_status],
+						{"target_id": target.id, "status": def.invoke_status,
+							"stacks": def.invoke_status_stacks}))
+			if not target.is_alive():
+				events.append(_log("actor_downed", "%s falls." % target.display_name,
+						{"actor_id": target.id}))
 	c.actor.spirit.begin_rest()
 	events.append(_log("spirit_resting",
 			"%s slips into rest (%d rounds)." % [c.display_name, def.rest_rounds],
@@ -328,14 +339,20 @@ func _pick_move(enemy: Combatant) -> Dictionary:
 
 
 func _passive_bonus(c: Combatant) -> int:
-	# The spirit's bonded passive empowers its contract holder (the player).
+	var def := _bonded_spirit_for(c)
+	if def != null and def.passive_kind == "stat_buff" and def.passive_stat == "attack":
+		return def.passive_amount
+	return 0
+
+
+func _bonded_spirit_for(c: Combatant) -> SpiritDef:
+	# The current single-spirit contract belongs to the player.
 	if c.is_enemy or c.actor == null or c.actor.id != "player":
-		return 0
+		return null
 	for member in party:
 		if member.is_spirit() and member.is_alive() and member.actor.spirit.is_bonded():
-			if member.actor.spirit.def.passive_stat == "attack":
-				return member.actor.spirit.def.passive_amount
-	return 0
+			return member.actor.spirit.def
+	return null
 
 
 func _living(group: Array[Combatant]) -> Array[Combatant]:

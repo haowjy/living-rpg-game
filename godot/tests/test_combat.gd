@@ -72,6 +72,32 @@ func run(t: TestHarness) -> void:
 	t.eq(step.party[0].status("guard"), 2, "evasive step applies guard to its user")
 	t.eq(step.enemies[0].hp(), step_target_hp, "evasive step deals no enemy damage")
 
+	t.context("sprout spirit")
+	var sprout_player := ActorState.new("player", "<player>", 20, 8, 8, 3)
+	var sprout_actor := ActorState.from_spirit_def(stance_db.spirit("spirit_b"))
+	var sprout_party: Array[ActorState] = [sprout_player, sprout_actor]
+	var sprout_log := EventLog.new()
+	var sprout := CombatState.new(stance_db, RngService.new(9), sprout_log,
+			stance_db.encounter("enc_road"), sprout_party)
+	sprout.perform({"kind": "guard"})
+	t.eq(sprout.party[0].status("guard"), 3,
+			"sprout adds one stack to its holder's Guard action")
+
+	var invoke_player := ActorState.new("player", "<player>", 20, 8, 6, 3)
+	var invoke_sprout := ActorState.from_spirit_def(stance_db.spirit("spirit_b"))
+	var invoke_party: Array[ActorState] = [invoke_player, invoke_sprout]
+	var invoke_log := EventLog.new()
+	var sprout_invoke := CombatState.new(stance_db, RngService.new(10), invoke_log,
+			stance_db.encounter("enc_road"), invoke_party)
+	for member in sprout_invoke.party:
+		member.add_status("burn", 2)
+	sprout_invoke.perform({"kind": "invoke"})
+	for member in sprout_invoke.party:
+		t.eq(member.status("guard"), 1, "sprout invoke guards %s" % member.id)
+		t.eq(member.status("burn"), 0, "sprout invoke cleanses %s burn" % member.id)
+	t.ok(invoke_sprout.spirit.contract_state == SpiritState.ContractState.RESTING,
+			"sprout rests after invoking")
+
 	t.context("turn order")
 	var gs := _full_party_state(11)
 	var combat := CombatState.new(gs.db, gs.rng, gs.event_log, gs.db.encounter("enc_road"), gs.party)
