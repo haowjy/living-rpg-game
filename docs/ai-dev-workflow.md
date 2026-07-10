@@ -33,28 +33,6 @@ art-source/              future source art, likely LFS or separate storage
 
 Only symlink assets that are intentionally shared and read-only. Do not symlink tracked branch-specific assets wholesale.
 
-## Worktree Profiles
-
-If worktree helpers are added later, use profiles like:
-
-```text
-code        agents, tools, tests, docs, and small scripts
-godot-lite  Godot scripts/scenes plus placeholder assets
-full        full asset checkout for short-lived visual playtests
-```
-
-The default should be `code`, not `full`.
-
-## AI Implementation Rules
-
-- Read `AGENTS.md` first.
-- Read the relevant design docs before coding.
-- Make the smallest complete playable slice, not broad scaffolding.
-- Prefer one deterministic implementation over parallel future-proof variants.
-- Delete dead or superseded code in the same change.
-- Do not leave half-wired systems behind.
-- Verify by running the real project, not just inspecting files.
-
 ## Godot MCP
 
 The project vendors the Godot AI addon in `godot/addons/godot_ai` and enables it in `godot/project.godot`.
@@ -84,13 +62,3 @@ Project > Project Settings > Plugins > Godot AI
 ```
 
 Use MCP for editor introspection, scene tree inspection, script attachment, and visual/debug feedback. Do not use it as a substitute for deterministic tests or for broad, unreviewed scene rewrites.
-
-## Handoff Report Shape
-
-Every implementation handoff should include:
-
-- What changed.
-- How to run it.
-- What was verified.
-- What remains intentionally out of scope.
-- Any risky assumptions the next agent should revisit.
