@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://game/actors/player.gd" id="1"]
 [ext_resource type="PackedScene" path="res://game/actors/paper_doll_character.tscn" id="2_paper_doll"]
+[ext_resource type="Texture2D" path="res://game/assets/generated/char_player.png" id="3_player"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(28, 36)
@@ -13,6 +14,23 @@ radius = 56.0
 script = ExtResource("1")
 
 [node name="PaperDollCharacter" parent="." instance=ExtResource("2_paper_doll")]
+
+[node name="BaseBody" parent="PaperDollCharacter"]
+visible = false
+
+[node name="Outfit" parent="PaperDollCharacter"]
+visible = false
+
+[node name="Hair" parent="PaperDollCharacter"]
+visible = false
+
+[node name="Character" type="Sprite2D" parent="PaperDollCharacter"]
+texture_filter = 1
+position = Vector2(0, -10)
+scale = Vector2(0.72, 0.72)
+texture = ExtResource("3_player")
+hframes = 4
+vframes = 4
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")

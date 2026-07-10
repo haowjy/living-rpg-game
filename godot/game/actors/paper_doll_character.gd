@@ -45,6 +45,17 @@ func set_motion(motion: Vector2) -> void:
 	_apply_frame()
 
 
+## Changes direction immediately without starting the walk cycle.
+func face(direction: Vector2) -> void:
+	if direction.is_zero_approx():
+		return
+	_direction_row = _row_for(direction)
+	_is_walking = false
+	_frame_time = 0.0
+	_walk_frame = 0
+	_apply_frame()
+
+
 func _row_for(motion: Vector2) -> DirectionRow:
 	if absf(motion.x) > absf(motion.y):
 		return DirectionRow.LEFT if motion.x < 0.0 else DirectionRow.RIGHT
