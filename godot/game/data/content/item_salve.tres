@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "salve"
+id = "item_salve"
 display_name = "<salve>"
 kind = "consumable"
 ; # TBD-owner

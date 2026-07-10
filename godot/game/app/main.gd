@@ -22,7 +22,6 @@ func _ready() -> void:
 	db = ContentDB.new()
 	gs = GameState.new(db, int(Time.get_unix_time_from_system()) % 1000000)
 	gs.start_new_run("hub_a")
-	gs.learn_technique("companion_a", "technique_b")
 
 	world = WorldView.new()
 	add_child(world)
@@ -108,30 +107,56 @@ func _on_choice(action: String, args: Dictionary) -> void:
 			dialogue.close()
 		"learn_and_start_quest":
 			dialogue.close()
-			gs.learn_technique("player", "technique_a")
 			gs.set_flag("quest_a_started", true)
 			gs.event_log.append("quest_started",
-					"<elder A> asked the party to deal with the band holding <ruin C>.",
+					"<elder A> asked the party to uncover why the watch at <ruin C> broke.",
 					{"quest_id": "quest_a"})
-			_show_toast("Learned <technique A; strike>. Quest started: the band at <ruin C>.")
-		"accept_pact":
+			_show_toast("Task started: learn why the watch at <ruin C> broke.")
+		"learn_technique_c":
 			dialogue.close()
-			gs.contract_spirit("spirit_a", 2)
-			_rebuild_world()
-			_show_toast("<spirit A> joins the party. The vow of blood cost 2 max HP.")
+			var result := gs.learn_technique("player", "technique_c")
+			_show_toast("Learned <technique C; guard stance>." if result["ok"] else String(result["error"]))
+		"learn_technique_d":
+			dialogue.close()
+			var result := gs.receive_mentor_lesson()
+			_show_toast("Learned <technique D>." if result["ok"] else String(result["error"]))
+		"buy_item":
+			dialogue.close()
+			var item_id := String(args["item_id"])
+			var result := gs.buy(item_id)
+			_show_toast("Bought %s." % db.item(item_id).display_name if result["ok"] else String(result["error"]))
+		"choose_spirit":
+			dialogue.close()
+			var spirit_id := String(args["spirit_id"])
+			var result := gs.contract_spirit(spirit_id)
+			if result["ok"]:
+				_rebuild_world()
+				_show_toast("%s joins the party." % db.spirit(spirit_id).display_name)
+			else:
+				_show_toast(String(result["error"]))
 		"fight_encounter":
 			dialogue.close()
 			_start_combat(String(args["encounter_id"]))
 		"negotiate_ruin":
 			dialogue.close()
-			gs.set_flag("quest_a_resolved_talk", true)
-			gs.set_flag("quest_a_done", true)
-			gs.event_log.append("quest_resolved",
-					"<spirit A> carried the party's words on the wind. The band abandoned "
-					+ "<ruin C> without a fight.",
-					{"quest_id": "quest_a", "resolution": "negotiated"})
+			var result := gs.reinstate_road_watch()
 			_rebuild_world()
-			_show_toast("The band leaves the ruin. Word of this will spread.")
+			_show_toast("The band resumes the road watch." if result["ok"] else String(result["error"]))
+		"take_charter":
+			dialogue.close()
+			var result := gs.take_charter()
+			_rebuild_world()
+			_show_toast("The band stands down. Take the charter to <reeve F>." if result["ok"] else String(result["error"]))
+		"expose_charter":
+			dialogue.close()
+			var before := gs.gold
+			var result := gs.expose_charter()
+			_rebuild_world()
+			_show_toast("The charter is exposed. Received %d gold." % (gs.gold - before) if result["ok"] else String(result["error"]))
+		"see_marshal_offer":
+			dialogue.close()
+			var result := gs.see_marshal_offer()
+			_show_toast("<marshal D>'s offer remains unanswered." if result["ok"] else String(result["error"]))
 		"restart":
 			get_tree().reload_current_scene()
 		_:
@@ -160,8 +185,6 @@ func _on_combat_finished(outcome: int) -> void:
 	world.show()
 	if outcome == CombatState.Outcome.VICTORY:
 		gs.apply_combat_outcome(_active_encounter_id, true)
-		if _active_encounter_id == "enc_ruin":
-			gs.set_flag("quest_a_done", true)
 	elif outcome == CombatState.Outcome.DEFEAT:
 		gs.apply_combat_outcome(_active_encounter_id, false)
 		dialogue.open({

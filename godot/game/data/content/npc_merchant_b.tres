@@ -7,5 +7,5 @@ script = ExtResource("1")
 id = "merchant_b"
 display_name = "<merchant B>"
 role = "merchant"
-goods = PackedStringArray("spirit_contract", "salve")
+goods = PackedStringArray("item_spirit_contract", "item_salve")
 body_color = Color(0.4, 0.65, 0.5, 1)

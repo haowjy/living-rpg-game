@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "spirit_contract"
+id = "item_spirit_contract"
 display_name = "<spirit contract>"
 kind = "spirit_contract"
 ; # TBD-owner

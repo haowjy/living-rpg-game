@@ -8,9 +8,8 @@ func _full_party_state(seed_value: int) -> GameState:
 	var db := ContentDB.new()
 	var gs := GameState.new(db, seed_value)
 	gs.start_new_run("hub_a")
-	gs.learn_technique("player", "technique_a")
-	gs.learn_technique("companion_a", "technique_b")
-	gs.contract_spirit("spirit_a", 2)
+	gs.inventory["item_spirit_contract"] = 1
+	gs.contract_spirit("spirit_a")
 	return gs
 
 
@@ -178,7 +177,7 @@ func run(t: TestHarness) -> void:
 	# Grind repeatable road fights until the technique crosses a threshold.
 	var grind := _full_party_state(21)
 	var before_level := grind.player().techniques[0].level()
-	for i in 4:
+	for i in 10:
 		var fight := CombatState.new(grind.db, grind.rng, grind.event_log,
 				grind.db.encounter("enc_road"), grind.party)
 		_play_out(fight)

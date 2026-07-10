@@ -30,9 +30,17 @@ func _init(p_db: ContentDB, p_seed: int) -> void:
 
 func start_new_run(start_area_id: String) -> void:
 	var player := ActorState.new("player", "<player>", 20, 8, 6, 3)
+	var starting_technique := TechniqueState.new(db.technique("technique_a"))
+	starting_technique.uses = TechniqueDef.LEVEL_THRESHOLDS[2]
+	player.techniques.append(starting_technique)
 	var companion := ActorState.new("companion_a", "<companion A>", 16, 6, 5, 2)
+	companion.techniques.append(TechniqueState.new(db.technique("technique_b")))
 	party = [player, companion]
 	current_area_id = start_area_id
+	# TBD-owner: tune starting funds with the final economy pass.
+	gold = 30
+	inventory = {}
+	flags = {}
 	event_log.append("run_started", "A new run begins in %s." % _area_name(start_area_id),
 			{"seed": rng.seed_value, "area_id": start_area_id})
 
@@ -149,23 +157,88 @@ func learn_technique(actor_id: String, technique_id: String) -> Dictionary:
 	return _ok()
 
 
-## Contract a spirit at a shrine. The pact has a visible cost: a vow of
-## blood — the contract holder permanently gives up vow_hp_cost max HP.
-func contract_spirit(spirit_id: String, vow_hp_cost: int = 2) -> Dictionary:
+## Contract the chosen spirit by consuming the ceremony item.
+func contract_spirit(spirit_id: String) -> Dictionary:
 	for actor in party:
 		if actor.is_spirit():
 			return _fail("A spirit is already bonded to this party.")
 	var def := db.spirit(spirit_id)
+	if not _consume_item("item_spirit_contract"):
+		return _fail("You need a spirit contract.")
+	if not _contract_succeeds(spirit_id):
+		return _fail("The spirit contract did not take hold.")
 	var holder := player()
-	holder.max_hp -= vow_hp_cost
-	holder.hp = mini(holder.hp, holder.max_hp)
 	var spirit_actor := ActorState.from_spirit_def(def)
 	party.append(spirit_actor)
 	set_flag("spirit_contracted", true)
 	event_log.append("spirit_contracted",
-			"%s sealed a pact with %s. The vow of blood costs %d max HP."
-				% [holder.display_name, def.display_name, vow_hp_cost],
-			{"spirit_id": spirit_id, "holder_id": holder.id, "vow_hp_cost": vow_hp_cost})
+			"%s formed a spirit contract with %s." % [holder.display_name, def.display_name],
+			{"spirit_id": spirit_id, "holder_id": holder.id})
+	return _ok()
+
+
+## Future affinity/chance model swaps this seam; deterministic success for now.
+func _contract_succeeds(_spirit_id: String) -> bool:
+	return true
+
+
+func reinstate_road_watch() -> Dictionary:
+	if not flag("quest_a_started") or flag("quest_a_done"):
+		return _fail("The watch cannot be reinstated now.")
+	if not flag("spirit_contracted"):
+		return _fail("A spirit must witness the reinstatement.")
+	set_flag("road_watch_reinstated", true)
+	set_flag("quest_a_resolved_talk", true)
+	set_flag("quest_a_done", true)
+	event_log.append("quest_resolved",
+			"The band re-swore its watch-oath at <ruin C>, witnessed by the party's spirit.",
+			{"quest_id": "quest_a", "resolution": "reinstated"})
+	return _ok()
+
+
+func take_charter() -> Dictionary:
+	if not flag("quest_a_started") or flag("quest_a_done") or flag("has_charter"):
+		return _fail("The unpaid charter cannot be taken now.")
+	set_flag("has_charter", true)
+	event_log.append("charter_taken",
+			"The party took the unpaid charter; the band stood down pending exposure.",
+			{"quest_id": "quest_a"})
+	return _ok()
+
+
+func expose_charter() -> Dictionary:
+	if not flag("has_charter") or flag("quest_a_done"):
+		return _fail("There is no unresolved charter to present.")
+	# TBD-owner: tune the charter payment with the final economy pass.
+	var payment := 15
+	gold += payment
+	set_flag("quest_a_resolved_expose", true)
+	set_flag("marshal_heard", true)
+	set_flag("quest_a_done", true)
+	event_log.append("quest_resolved",
+			"<noble family A> paid the exposed charter grudgingly.",
+			{"quest_id": "quest_a", "resolution": "exposed", "payment": payment, "gold": gold})
+	return _ok()
+
+
+func receive_mentor_lesson() -> Dictionary:
+	if flag("mentor_taught") or player().technique_by_id("technique_d") != null:
+		return _fail("<mentor E> has nothing more to teach.")
+	var result := learn_technique("player", "technique_d")
+	if not result["ok"]:
+		return result
+	set_flag("mentor_taught", true)
+	return _ok()
+
+
+func see_marshal_offer() -> Dictionary:
+	if not flag("quest_a_done"):
+		return _fail("<marshal D> has no offer yet.")
+	if flag("marshal_offer_seen"):
+		return _fail("<marshal D>'s offer has already been heard.")
+	set_flag("marshal_offer_seen", true)
+	event_log.append("marshal_offer_seen",
+			"<marshal D> made an offer. The party left it unanswered.", {})
 	return _ok()
 
 
@@ -181,6 +254,8 @@ func flag(name: String, default: Variant = false) -> Variant:
 
 ## Whether an encounter can currently be fought.
 func can_fight(encounter_id: String) -> bool:
+	if encounter_id == "enc_road" and flag("road_watch_reinstated"):
+		return false
 	var enc := db.encounter(encounter_id)
 	if enc.repeatable:
 		return true
@@ -192,6 +267,8 @@ func apply_combat_outcome(encounter_id: String, victory: bool) -> void:
 	var enc := db.encounter(encounter_id)
 	if victory and enc.victory_flag != "":
 		set_flag(enc.victory_flag, true)
+		if encounter_id == "enc_ruin":
+			set_flag("quest_a_done", true)
 	event_log.append("combat_ended",
 			"%s: %s." % [enc.display_name, "victory" if victory else "defeat"],
 			{"encounter_id": encounter_id, "victory": victory})
