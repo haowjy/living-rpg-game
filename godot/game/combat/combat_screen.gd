@@ -5,6 +5,8 @@ extends Control
 
 signal finished(outcome: int)
 
+enum Phase { COMMAND, TARGETING, RESOLVING, OUTCOME }
+
 const PANEL := preload("res://game/assets/generated/ui/panel.png")
 const CURSOR := preload("res://game/assets/generated/ui/cursor.png")
 const ENEMY_INTENT_DELAY := 0.62
@@ -15,8 +17,7 @@ var _pending_command: Dictionary = {}
 var _cards: Dictionary = {}
 var _targets: Array[Combatant] = []
 var _target_index := 0
-var _targeting := false
-var _outcome_ready := false
+var _phase := Phase.RESOLVING
 var _driving := false
 
 var _shake_layer: Control
@@ -55,12 +56,17 @@ func start(p_combat: CombatState, intro_text: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _outcome_ready and event.is_action_pressed("ui_accept"):
+	if _phase == Phase.OUTCOME and event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
-		_outcome_ready = false
+		_phase = Phase.RESOLVING
 		finished.emit(combat.outcome)
 		return
-	if not _targeting:
+	if _phase == Phase.COMMAND and event.is_action_pressed("ui_accept") \
+			and get_viewport().gui_get_focus_owner() == null:
+		_focus_first_action()
+		get_viewport().set_input_as_handled()
+		return
+	if _phase != Phase.TARGETING:
 		return
 	if event.is_action_pressed("ui_left"):
 		_target_index = wrapi(_target_index - 1, 0, _targets.size())
@@ -83,6 +89,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _drive() -> void:
 	if _driving:
 		return
+	_phase = Phase.RESOLVING
 	_driving = true
 	while combat != null:
 		if combat.is_over():
@@ -113,7 +120,8 @@ func _drive() -> void:
 
 
 func _offer_commands(current: Combatant) -> void:
-	_targeting = false
+	_phase = Phase.COMMAND
+	_pending_command.clear()
 	_target_cursor.hide()
 	_hint.text = "%s'S TURN  ·  CHOOSE AN ACTION" % current.display_name.to_upper()
 	_message.text = "What will %s do?" % current.display_name
@@ -137,6 +145,13 @@ func _offer_commands(current: Combatant) -> void:
 		first_button.call_deferred("grab_focus")
 
 
+func _focus_first_action() -> void:
+	for child in _actions.get_children():
+		if child is Button and not child.disabled:
+			child.grab_focus()
+			return
+
+
 func _on_command(command: Dictionary) -> void:
 	var kind := String(command["kind"])
 	match kind:
@@ -156,7 +171,7 @@ func _enter_targeting() -> void:
 	if _targets.is_empty():
 		return
 	_clear_actions()
-	_targeting = true
+	_phase = Phase.TARGETING
 	_target_index = 0
 	_hint.text = "SELECT TARGET  ·  ◀ ▶ MOVE  ·  CONFIRM  ·  CANCEL"
 	_message.text = "Choose an enemy."
@@ -166,23 +181,27 @@ func _enter_targeting() -> void:
 
 
 func _confirm_target() -> void:
-	if not _targeting or _targets.is_empty():
+	if _phase != Phase.TARGETING or _targets.is_empty():
 		return
 	var command := _pending_command.duplicate()
+	_pending_command.clear()
 	command["target_id"] = _targets[_target_index].id
-	_targeting = false
+	_phase = Phase.RESOLVING
 	_target_cursor.hide()
 	_submit(command)
 
 
 func _cancel_targeting() -> void:
-	_targeting = false
+	if _phase != Phase.TARGETING:
+		return
 	_target_cursor.hide()
 	_pending_command.clear()
 	_offer_commands(combat.current())
 
 
 func _submit(command: Dictionary) -> void:
+	_phase = Phase.RESOLVING
+	_pending_command.clear()
 	_clear_actions()
 	_hint.text = "RESOLVING…"
 	var events := combat.perform(command)
@@ -461,7 +480,7 @@ func _refresh() -> void:
 
 
 func _update_target_cursor() -> void:
-	if not _targeting or _targets.is_empty():
+	if _phase != Phase.TARGETING or _targets.is_empty():
 		return
 	var card := _card_for(_targets[_target_index].id)
 	if card == null:
@@ -518,7 +537,8 @@ func _show_outcome() -> void:
 	if _outcome_overlay != null:
 		return
 	_clear_actions()
-	_targeting = false
+	_phase = Phase.OUTCOME
+	_pending_command.clear()
 	_target_cursor.hide()
 	_hint.text = ""
 	_outcome_overlay = ColorRect.new()
@@ -567,4 +587,3 @@ func _show_outcome() -> void:
 	prompt.add_theme_color_override("font_color", Color("9dc2c2"))
 	card.add_child(prompt)
 	await get_tree().create_timer(0.55).timeout
-	_outcome_ready = true

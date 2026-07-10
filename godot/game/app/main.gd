@@ -62,23 +62,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			log_panel.toggle()
 		elif event.is_action_pressed("toggle_debug") and debug_overlay != null:
 			debug_overlay.toggle()
-	# Combat creates fresh command buttons each turn. Always give keyboard and
-	# controller users a focus entry point without coupling to combat rules.
-	if screen == Screen.COMBAT and event.is_action_pressed("ui_accept") \
-			and get_viewport().gui_get_focus_owner() == null:
-		_focus_first_button(combat_screen)
-	elif screen == Screen.COMBAT and event.is_action_pressed("ui_cancel") \
-			and combat_screen != null and not combat_screen._pending_command.is_empty():
-		combat_screen._pending_command.clear()
-		combat_screen._offer_commands(combat_screen.combat.current())
-		get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:
-	if screen == Screen.COMBAT:
-		if get_viewport().gui_get_focus_owner() == null:
-			_focus_first_button(combat_screen)
-		return
 	if screen != Screen.OVERWORLD or world == null or world.player == null or dialogue == null:
 		return
 	if _interaction_hint != null:
@@ -394,18 +380,6 @@ func _show_first_spawn_hint() -> void:
 	tween.tween_interval(3.0)
 	tween.tween_property(hint, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(hint.queue_free)
-
-
-func _focus_first_button(root: Node) -> void:
-	if root == null:
-		return
-	for child in root.get_children():
-		if child is Button and not child.disabled:
-			child.grab_focus()
-			return
-		_focus_first_button(child)
-		if get_viewport().gui_get_focus_owner() != null:
-			return
 
 
 func _begin_transition() -> void:
