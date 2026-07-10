@@ -251,9 +251,7 @@ func _on_choice(action: String, args: Dictionary) -> void:
 		"close":
 			_close_dialogue()
 		"learn_and_start_quest":
-			gs.set_flag("quest_a_started", true)
-			gs.event_log.append("quest_started", "<elder A> asked the party to uncover why the watch at <ruin C> broke.", {"quest_id": "quest_a"})
-			_open_message("Task begun", "Learn why the watch at <ruin C> broke.")
+			_show_result(gs.start_quest_a(), "Learn why the watch at <ruin C> broke.")
 		"learn_technique_c":
 			_show_result(gs.learn_technique("player", "technique_c"), "Learned <technique C; guard stance>.")
 		"learn_technique_d":

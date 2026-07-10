@@ -177,6 +177,16 @@ func contract_spirit(spirit_id: String) -> Dictionary:
 	return _ok()
 
 
+func start_quest_a() -> Dictionary:
+	if flag("quest_a_started") or flag("quest_a_done"):
+		return _fail("The broken watch task has already begun.")
+	set_flag("quest_a_started", true)
+	event_log.append("quest_started",
+			"<elder A> asked the party to uncover why the watch at <ruin C> broke.",
+			{"quest_id": "quest_a"})
+	return _ok()
+
+
 ## Future affinity/chance model swaps this seam; deterministic success for now.
 func _contract_succeeds(_spirit_id: String) -> bool:
 	return true

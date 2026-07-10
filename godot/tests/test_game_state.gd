@@ -17,6 +17,18 @@ func run(t: TestHarness) -> void:
 	t.ok(gs.party[1].technique_by_id("technique_b") != null, "companion keeps technique_b")
 	t.eq(gs.event_log.entries.size(), 1, "run start is logged")
 
+	t.context("quest start command")
+	var quest_started := gs.start_quest_a()
+	t.ok(quest_started["ok"], "quest A starts through its public command")
+	t.ok(gs.flag("quest_a_started"), "quest start command sets its flag")
+	t.eq(gs.event_log.entries[-1]["type"], "quest_started", "quest start emits its domain event")
+	t.eq(gs.event_log.entries[-1]["data"], {"quest_id": "quest_a"}, "quest start identifies the quest")
+	var quest_event_count := gs.event_log.entries.size()
+	var duplicate_quest := gs.start_quest_a()
+	t.ok(not duplicate_quest["ok"], "quest A cannot start twice")
+	t.eq(gs.event_log.entries.size(), quest_event_count + 1, "rejected duplicate only appends its rejection")
+	t.eq(gs.event_log.entries[-1]["type"], "command_rejected", "duplicate quest start is logged as rejected")
+
 	t.context("movement")
 	var bad := gs.move_to_area("ruin_c")
 	t.ok(not bad["ok"], "moving to a non-adjacent area is rejected")
