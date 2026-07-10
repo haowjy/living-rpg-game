@@ -17,6 +17,14 @@ func run(t: TestHarness) -> void:
 	t.eq(time_event["type"], "time_advanced", "time advancement is logged")
 	t.eq(time_event["data"], {"day": 2, "time_of_day": 0},
 			"time event carries the resulting day and segment")
+	var unchanged_clock := [rollover.day, rollover.time_of_day]
+	var zero_advance := rollover.advance_time(0)
+	t.ok(not zero_advance["ok"] and not String(zero_advance["error"]).is_empty(),
+			"zero-segment time advancement is rejected")
+	t.eq([rollover.day, rollover.time_of_day], unchanged_clock,
+			"rejected time advancement preserves the clock")
+	t.eq(rollover.event_log.entries[-1]["type"], "command_rejected",
+			"rejected time advancement is logged")
 
 	var traveler := GameState.new(db, 42)
 	traveler.start_new_run("hub_a")
@@ -33,6 +41,17 @@ func run(t: TestHarness) -> void:
 	t.eq(traveler.time_of_day, before_interior, "entering an interior does not advance time")
 	t.eq(traveler.event_log.entries[-1]["type"], "traveled",
 			"interior travel does not append a time event")
+	var travel_clock := [traveler.day, traveler.time_of_day]
+	var travel_event_count := traveler.event_log.entries.size()
+	var blocked_travel := traveler.move_to_area("ruin_c")
+	t.ok(not blocked_travel["ok"] and not String(blocked_travel["error"]).is_empty(),
+			"non-adjacent travel is rejected")
+	t.eq([traveler.day, traveler.time_of_day], travel_clock,
+			"rejected travel preserves the clock")
+	t.eq(traveler.event_log.entries.size(), travel_event_count + 1,
+			"rejected travel appends only its rejection")
+	t.eq(traveler.event_log.entries[-1]["type"], "command_rejected",
+			"rejected travel appends no time advancement")
 
 	t.context("rest")
 	var resting := GameState.new(db, 42)
@@ -56,10 +75,18 @@ func run(t: TestHarness) -> void:
 
 	var away := GameState.new(db, 42)
 	away.start_new_run("road_b")
+	away.time_of_day = 2
 	away.player().hp = 3
+	away.player().qi = 1
+	away.party[1].hp = 2
+	away.party[1].qi = 0
+	var away_vitals := _party_vitals(away)
+	var away_clock := [away.day, away.time_of_day]
 	var rejected := away.rest()
-	t.ok(not rejected["ok"], "resting away from the hub is rejected")
-	t.eq(away.player().hp, 3, "rejected rest does not restore HP")
+	t.ok(not rejected["ok"] and not String(rejected["error"]).is_empty(),
+			"resting away from the hub is rejected")
+	t.eq(_party_vitals(away), away_vitals, "rejected rest preserves every actor's HP and qi")
+	t.eq([away.day, away.time_of_day], away_clock, "rejected rest preserves the clock")
 	t.eq(away.event_log.entries[-1]["type"], "command_rejected",
 			"rejected rest is logged")
 
@@ -75,6 +102,25 @@ func run(t: TestHarness) -> void:
 	t.eq(shopper.event_log.entries[-1]["data"]["item_id"], "item_salve",
 			"buy event identifies the item")
 
+	var exact := GameState.new(db, 42)
+	exact.start_new_run("hub_a_interior")
+	exact.gold = db.item("item_salve").price
+	t.ok(exact.buy("item_salve")["ok"], "buying with exactly the price succeeds")
+	t.eq(exact.gold, 0, "exact-price purchase spends all gold")
+	var short := GameState.new(db, 42)
+	short.start_new_run("hub_a_interior")
+	short.gold = db.item("item_salve").price - 1
+	var short_inventory := short.inventory.duplicate()
+	var short_buy := short.buy("item_salve")
+	t.ok(not short_buy["ok"] and not String(short_buy["error"]).is_empty(),
+			"buying at price minus one is rejected")
+	t.eq(short.gold, db.item("item_salve").price - 1,
+			"insufficient-funds rejection preserves gold")
+	t.eq(short.inventory, short_inventory,
+			"insufficient-funds rejection preserves inventory")
+	t.eq(short.event_log.entries[-1]["type"], "command_rejected",
+			"insufficient-funds rejection is logged")
+
 	shopper.gold = 0
 	var poor := shopper.buy("item_salve")
 	t.ok(not poor["ok"], "buying with insufficient gold is rejected")
@@ -87,8 +133,10 @@ func run(t: TestHarness) -> void:
 	remote.start_new_run("hub_a")
 	remote.gold = 30
 	var no_merchant := remote.buy("item_salve")
-	t.ok(not no_merchant["ok"], "buying without a present merchant is rejected")
+	t.ok(not no_merchant["ok"] and not String(no_merchant["error"]).is_empty(),
+			"buying without a present merchant is rejected")
 	t.eq(remote.gold, 30, "rejected remote purchase does not deduct gold")
+	t.eq(remote.inventory, {}, "rejected remote purchase preserves inventory")
 	t.eq(remote.event_log.entries[-1]["type"], "command_rejected",
 			"remote purchase rejection is logged")
 
@@ -112,6 +160,15 @@ func run(t: TestHarness) -> void:
 	t.eq(shopper.event_log.entries[-1]["type"], "item_sold", "selling is logged")
 	t.eq(shopper.event_log.entries[-1]["data"]["refund"], 3,
 			"sell event carries the refund")
+	var sell_gold := shopper.gold
+	var sell_inventory := shopper.inventory.duplicate()
+	var unowned_sale := shopper.sell("item_spirit_contract")
+	t.ok(not unowned_sale["ok"] and not String(unowned_sale["error"]).is_empty(),
+			"selling an unowned item is rejected")
+	t.eq(shopper.gold, sell_gold, "unowned sale preserves gold")
+	t.eq(shopper.inventory, sell_inventory, "unowned sale preserves inventory")
+	t.eq(shopper.event_log.entries[-1]["type"], "command_rejected",
+			"unowned sale rejection is logged")
 
 	t.context("use item")
 	var user := GameState.new(db, 42)
@@ -127,21 +184,26 @@ func run(t: TestHarness) -> void:
 			"item event carries actual healing")
 
 	user.inventory["item_spirit_contract"] = 1
+	user.player().hp = user.player().max_hp - 4
+	var injured_hp := user.player().hp
 	var inert := user.use_item("item_spirit_contract")
-	t.ok(not inert["ok"], "using a spirit contract away from its destination is rejected")
-	t.eq(inert["error"], "Nothing happens here.", "spirit contract rejection is explicit")
+	t.ok(not inert["ok"] and not String(inert["error"]).is_empty(),
+			"using a spirit contract away from its destination is rejected")
 	t.eq(user.inventory["item_spirit_contract"], 1,
 			"rejected spirit contract use does not consume it")
+	t.eq(user.player().hp, injured_hp,
+			"rejected spirit contract use does not heal an injured player")
 	t.eq(user.event_log.entries[-1]["type"], "command_rejected",
 			"rejected spirit contract use is logged")
 
-	t.context("consume seam")
-	user.inventory["item_salve"] = 2
-	t.ok(user._consume_item("item_salve"), "consume helper reports an owned item")
-	t.eq(user.inventory["item_salve"], 1, "consume helper decrements an owned item")
-	t.ok(not user._consume_item("missing"), "consume helper rejects an absent item")
-	t.eq(user.inventory.get("missing", 0), 0,
-			"consume helper does not create an absent inventory entry")
+	var unowned_inventory := user.inventory.duplicate()
+	var unowned_use := user.use_item("item_salve")
+	t.ok(not unowned_use["ok"] and not String(unowned_use["error"]).is_empty(),
+			"using an unowned item is rejected")
+	t.eq(user.inventory, unowned_inventory, "unowned use preserves inventory")
+	t.eq(user.player().hp, injured_hp, "unowned use preserves HP")
+	t.eq(user.event_log.entries[-1]["type"], "command_rejected",
+			"unowned use rejection is logged")
 
 	t.context("determinism")
 	var first_log := _run_fixed_commands(db)
@@ -160,3 +222,7 @@ func _run_fixed_commands(db: ContentDB) -> String:
 	gs.rest()
 	gs.move_to_area("road_b")
 	return gs.event_log.to_jsonl()
+
+
+func _party_vitals(gs: GameState) -> Array:
+	return gs.party.map(func(actor: ActorState) -> Array: return [actor.hp, actor.qi])

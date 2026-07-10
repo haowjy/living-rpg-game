@@ -35,8 +35,10 @@ func run(t: TestHarness) -> void:
 	var without_item := GameState.new(db, 42)
 	without_item.start_new_run("shrine_d")
 	var rejected_contract := without_item.contract_spirit("spirit_a")
-	t.ok(not rejected_contract["ok"], "spirit contract requires its item")
-	t.eq(rejected_contract["error"], "You need a spirit contract.", "missing item error is explicit")
+	t.ok(not rejected_contract["ok"] and not String(rejected_contract["error"]).is_empty(),
+			"spirit contract requires its item")
+	t.eq(without_item.event_log.entries[-1]["type"], "command_rejected",
+			"missing contract item rejection is logged")
 	var hp_before := without_item.player().max_hp
 	without_item.inventory["item_spirit_contract"] = 1
 	var contracted := without_item.contract_spirit("spirit_b")
@@ -122,6 +124,17 @@ func run(t: TestHarness) -> void:
 		if choice["action"] == "choose_spirit":
 			spirit_ids.append(choice["args"]["spirit_id"])
 	t.eq(spirit_ids, ["spirit_a", "spirit_b", "spirit_c"], "ceremony offers all three spirit choices")
+	var ceremony_contract := ceremony.contract_spirit("spirit_b")
+	t.ok(ceremony_contract["ok"], "ceremony contracts the selected spirit through the public command")
+	t.eq(ceremony.inventory["item_spirit_contract"], 0,
+			"ceremony consumes the contract item")
+	var no_contract_ceremony := GameState.new(db, 42)
+	no_contract_ceremony.start_new_run("shrine_d")
+	var no_contract_result := no_contract_ceremony.contract_spirit("spirit_b")
+	t.ok(not no_contract_result["ok"] and not String(no_contract_result["error"]).is_empty(),
+			"ceremony rejects contracting without an item")
+	t.eq(no_contract_ceremony.event_log.entries[-1]["type"], "command_rejected",
+			"ceremony logs its missing-item rejection")
 	var confrontation := GameState.new(db, 42)
 	confrontation.start_new_run("ruin_c")
 	confrontation.set_flag("quest_a_started", true)
