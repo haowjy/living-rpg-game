@@ -63,6 +63,10 @@ Techniques are learned forms with proficiency. The player can later evolve maste
 
 ## Combat direction
 
+> **Superseded** by "2026-07-10 — Prototype combat direction" above: visual
+> turn-based party combat from the start, stacking statuses, break tags,
+> spirits. Kept for the reasoning trail.
+
 **V0:** Narrative turn resolution. The player describes what they do in free text. The LLM interprets and narrates the outcome, while tools validate state changes.
 
 **V1:** Turn-based party combat, closer to Darkest Dungeon than an action RPG. Use positions, turn order, stress, injury, marks, status effects, target rules, named techniques, retreats, and party state.
