@@ -163,8 +163,16 @@ func _add_camera(target: Node2D, map_size: Vector2i) -> void:
 	camera.limit_top = 0
 	camera.limit_right = map_size.x * TILE_SIZE
 	camera.limit_bottom = map_size.y * TILE_SIZE
-	camera.limit_smoothed = true
-	camera.zoom = Vector2(1.25, 1.25)
+	# Zoom far enough that even the compact shop fills the viewport; camera
+	# limits alone cannot hide outside space when a map is smaller than view.
+	var viewport_size := Vector2(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height"),
+	)
+	var pixel_size := Vector2(map_size * TILE_SIZE)
+	var minimum_zoom: float = maxf(viewport_size.x / pixel_size.x, viewport_size.y / pixel_size.y)
+	var zoom_level: float = maxf(1.25, minimum_zoom)
+	camera.zoom = Vector2(zoom_level, zoom_level)
 	target.add_child(camera)
 
 
