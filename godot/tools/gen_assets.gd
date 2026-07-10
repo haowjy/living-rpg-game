@@ -61,6 +61,7 @@ const TILE_NAMES: Array[String] = [
 	"door", "fence", "bridge_plank", "shrine_stone",
 	"water_lily", "mud", "path_corner", "grass_tuft",
 	"stump", "stone_steps", "flower_patch", "signpost",
+	"shop_counter", "shop_shelf", "shop_crate",
 ]
 
 var _written: Array[Dictionary] = []
@@ -144,7 +145,7 @@ func _tile_base(atlas: Image, index: int, base: Color, light: Color, dark: Color
 
 
 func _generate_tiles() -> void:
-	var atlas := _new_image(TILE_COLUMNS * TILE_SIZE, 4 * TILE_SIZE)
+	var atlas := _new_image(TILE_COLUMNS * TILE_SIZE, 5 * TILE_SIZE)
 	var o: Vector2i
 	# Grass variants.
 	o = _tile_base(atlas, 0, GRASS_MID, GRASS_LIGHT, GRASS_DARK, 10)
@@ -300,6 +301,27 @@ func _generate_tiles() -> void:
 	_rect(atlas, o.x + 5, o.y + 7, 22, 11, INK)
 	_rect(atlas, o.x + 7, o.y + 9, 18, 7, WOOD_MID)
 	_hline(atlas, o.x + 10, o.y + 11, 9, PATH_LIGHT)
+	# Shop furnishings use the timber floor as their base so interior overlays
+	# never introduce outdoor ground colors.
+	o = _tile_base(atlas, 32, WOOD_MID, PATH_LIGHT, WOOD_DARK, 4)
+	_rect(atlas, o.x, o.y + 8, 32, 23, INK)
+	_rect(atlas, o.x + 2, o.y + 9, 28, 20, WOOD_DARK)
+	_rect(atlas, o.x + 3, o.y + 11, 26, 5, PATH_MID)
+	_hline(atlas, o.x + 3, o.y + 22, 26, WOOD_MID)
+	_vline(atlas, o.x + 15, o.y + 16, 13, INK)
+	o = _tile_base(atlas, 33, WOOD_MID, PATH_LIGHT, WOOD_DARK, 4)
+	_rect(atlas, o.x + 3, o.y + 2, 26, 28, INK)
+	_rect(atlas, o.x + 5, o.y + 4, 22, 24, WOOD_DARK)
+	for shelf_y in [10, 19, 27]:
+		_hline(atlas, o.x + 5, o.y + shelf_y, 22, PATH_MID)
+	for item in [Vector2i(7, 6), Vector2i(16, 5), Vector2i(10, 14), Vector2i(20, 15), Vector2i(7, 22), Vector2i(17, 21)]:
+		_rect(atlas, o.x + item.x, o.y + item.y, 4, 4, GOLD if item.x % 2 else CLOTH_B)
+	o = _tile_base(atlas, 34, WOOD_MID, PATH_LIGHT, WOOD_DARK, 4)
+	_rect(atlas, o.x + 6, o.y + 10, 20, 19, INK)
+	_rect(atlas, o.x + 8, o.y + 8, 16, 19, WOOD_DARK)
+	_rect(atlas, o.x + 10, o.y + 10, 12, 15, WOOD_MID)
+	_hline(atlas, o.x + 8, o.y + 15, 16, PATH_MID)
+	_vline(atlas, o.x + 15, o.y + 10, 15, WOOD_DARK)
 	_save(atlas, "tiles.png")
 
 
@@ -514,7 +536,7 @@ func _generate_ui() -> void:
 
 func _write_manifest() -> void:
 	var notes := {
-		"tiles.png": "32-tile atlas; 32 px cells in an 8×4 grid.",
+		"tiles.png": "35-tile atlas including shop counter, shelf, and crate; 32 px cells in an 8×5 grid.",
 		"ui/panel.png": "48×48 9-slice panel; 8 px slice border and 10 px content margin.",
 		"ui/bar_frame.png": "Stretchable 64×8 bar frame; 2 px inset.",
 		"ui/hp_fill.png": "One-pixel-wide stretchable HP fill.",

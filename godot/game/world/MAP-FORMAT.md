@@ -70,6 +70,9 @@ tiles receive full 32×32 collision from `TilesetBuilder`.
 | `*` | flower_patch | (6,3) | no |
 | `'` | grass_tuft | (3,3) | no |
 | `l` | water_lily | (0,3) | no |
+| `c` | shop_counter | (0,4) | **yes** |
+| `h` | shop_shelf | (1,4) | **yes** |
+| `q` | shop_crate | (2,4) | **yes** |
 
 Do not add a second mapping in generator or renderer code. Extend
 `TileVocabulary.TILES` and this reference together.

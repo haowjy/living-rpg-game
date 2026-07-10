@@ -34,4 +34,7 @@ const TILES: Dictionary = {
 	"*": {"semantic": "flower_patch", "atlas": Vector2i(6, 3), "solid": false}, # flowers
 	"'": {"semantic": "grass_tuft", "atlas": Vector2i(3, 3), "solid": false}, # tall grass tuft
 	"l": {"semantic": "water_lily", "atlas": Vector2i(0, 3), "solid": false}, # water lily
+	"c": {"semantic": "shop_counter", "atlas": Vector2i(0, 4), "solid": true}, # merchant counter
+	"h": {"semantic": "shop_shelf", "atlas": Vector2i(1, 4), "solid": true}, # stocked shelf
+	"q": {"semantic": "shop_crate", "atlas": Vector2i(2, 4), "solid": true}, # storage crate
 }
