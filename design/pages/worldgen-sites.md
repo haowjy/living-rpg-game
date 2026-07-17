@@ -1,10 +1,23 @@
 # World Generation and Sites
 
-World generation creates a continuous, explorable region from a single seed. The world exists as a master map of undiscovered areas. Detail generates on demand as the player explores, locks when loaded, and persists from that point forward.
+World generation creates a continuous, explorable region from a single seed.
+The world distinguishes two spatial categories (2026-07-17):
 
-## Chunk-Based World Generation
+- **Overworld** — regular space. Generated once from a seed, locks permanently,
+  and persists. Changes after generation (a building burns, a camp appears) are
+  state mutations on the locked generation, not regeneration.
+- **Dungeon** — special anomalous/lore-recognized spaces where monsters
+  spontaneously spawn. Procedurally generated at runtime/repeatedly. Exact
+  regeneration lifecycle (per-entry, timed refresh, floor/expedition cycles) is
+  an open question. See KB: `systems/terrain-dungeons.md`.
 
-The world uses a Minecraft-style chunk system adapted for 2.5D tiles.
+The overworld exists as a master map of undiscovered areas. Detail generates
+on demand as the player explores, locks when loaded, and persists from that
+point forward.
+
+## Chunk-Based Overworld Generation
+
+The overworld uses a Minecraft-style chunk system adapted for 2.5D tiles.
 
 ### Layer 1: World Seed → Master Map
 

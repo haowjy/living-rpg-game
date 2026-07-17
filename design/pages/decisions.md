@@ -2,6 +2,42 @@
 
 Decisions from the design review. These supersede conflicting statements in earlier bundle pages.
 
+## 2026-07-17 — Presentation-first, Oracle-directable direction
+
+Settled during the foundation-audit session. Supersedes "Standalone demo first" below.
+
+- **Presentation comes first**, built as an LLM-directable stage. The presentation accepts a narrow Director command vocabulary; human-authored scripts, deterministic drivers, and future LLMs all use the same commands. LLM controls meaningful beats, not per-frame movement or physics.
+- Desired presentation: polished, mobile-capable, Pokemon Black/White-inspired 2D/2.5D — top-down movement, strong dialogue/portrait UI, real-time ambient movement, deterministic turn-based encounters.
+- A separate AI story-writing/polishing system may later supply scene material.
+
+### System boundary
+
+Governing rule: LLM proposes or interprets what is meaningful; deterministic code validates and establishes what is true; presentation performs it. Basic movement, time, legal actions, state mutation, combat resolution, item ownership, and ordinary NPC routines stay deterministic. Every LLM lane requires structured proposals, tool validation, deterministic fallback, and traceability.
+
+### People and story (MVP)
+
+- MVP focus is people rather than spirits. Spirits are deferred from MVP; long-term lore preserved, clearly marked.
+- No conventional player-facing quest checklist. People make requests; the world records witnessed facts, promises, fulfilled or forgotten commitments, and consequences. If the player forgets, the requester can remember.
+- Internally, the Oracle manages unresolved requests, commitments, story pressure, and living threads — the architectural "quest system," not player-visible as objectives or `Quest Failed` messaging.
+- A journal, if present, records what was said rather than converting speech into tasks.
+
+### Terrain and dungeons
+
+- Overworld space is generated once and persists. Supersedes any claim of continual overworld regeneration.
+- Dungeon spaces are lore-distinguished anomalous spaces where monsters spontaneously spawn; procedurally generated at runtime/repeatedly.
+- Routine monster generation is seeded and deterministic; the Oracle interprets meaningful changes (surges, disappearances, faction activity).
+- Exact dungeon-regeneration lifecycle and cosmological origin of Dungeons/monsters are intentionally unresolved.
+
+### Engine preference
+
+TypeScript is the current preference, not a ratified platform decision. No framework is locked.
+
+### Required deterministic/hybrid systems inventory
+
+State/entity/commands/events/RNG/save-load-replay/content; Director cues/input/mobile UI/camera/dialogue/animation/assets; movement/tile navigation/collision/facing/pathfinding; clock/scheduler/NPC routines; people with goals/knowledge/witnessing/memories/rumors/relationships/requests; situation eligibility and Oracle scene selection with deterministic fallback; deterministic combat with interchangeable controllers; techniques with data-defined effects, proficiency, LLM evolution; semi-deterministic weapons; inventory/equipment/crafting/repair/reforging; debug/authoring tools.
+
+See KB: `decisions/2026-07-17-presentation-oracle-direction.md`.
+
 ## 2026-07-10 — Prototype combat direction (supersedes "Combat direction" below)
 
 Decided while building the first deterministic Godot slice:
