@@ -1,131 +1,100 @@
-# Growth and Power
+# Growth, Techniques, and Weapons
 
-Growth supports the story of rising faster than ordinary people in a collapsing world. The player's rise is multi-channel: personal strength, learned techniques, proficiency, shrine breakthroughs, allies, reputation, territory, institutional leverage, and evolved forms shaped by the player's history.
+Growth should preserve two feelings: the player becomes more capable through
+understandable rules, and their history changes what that capability becomes.
+Deterministic systems own power; LLMs propose personalized forms within those
+systems.
 
-## Technique Mastery
+## Technique lifecycle
 
-The signature progression system is technique mastery.
+### Learn
 
-Techniques are not handed out automatically because a meaningful event happened. Events are remembered as context. The player gains power by learning forms, practicing them, mastering them, and then choosing how to evolve them.
+Techniques come from manuals, teachers, observed enemies, relics, experiments,
+or other concrete sources. Learning creates a legal technique definition rather
+than a free-text power.
 
-### 1. Learn Forms
+### Practice
 
-Techniques come from concrete sources:
-
-| Source | How it works |
-|---|---|
-| Manuals | Martial texts, technique scrolls, field notes, strange books |
-| Teachers | Masters, companions, rivals, faction trainers |
-| Enemies | Observed moves that can be studied or copied later |
-| Relics | Old weapons, sealed tools, shrines, statues, ruins |
-| Experimentation | Combining existing skills into rough new forms |
-
-At first, a technique is external. The player knows the form, but it is not yet personal.
-
-### 2. Gain Proficiency
-
-Training is simple. Proficiency rises when the player:
-
-- uses the technique in combat or exploration
-- practices it during downtime
-- drills it with a teacher or companion
-- studies the relevant manual
-- repeats it under pressure
-
-Suggested proficiency ladder:
+Proficiency rises through use, drills, study, training, and relevant
+exploration. Ordinary gains are deterministic and recorded as events.
 
 | Level | Meaning |
 |---|---|
 | Untrained | Known but unreliable |
-| Novice | Usable, but clumsy or costly |
+| Novice | Usable with meaningful limits |
 | Competent | Reliable under ordinary pressure |
-| Expert | Strong enough to build tactics around |
+| Expert | Strong enough to define tactics |
 | Master | Flexible enough to evolve |
 
-Most training does not call for LLM invention. It increments proficiency, updates history, and records context.
+### Evolve
 
-### 3. Make It Your Own
+At an eligible threshold, the player chooses references:
 
-At proficiency thresholds, the player can evolve or combine techniques.
+- another known technique;
+- a manual passage, relic, or teacher;
+- a remembered event;
+- a recurring combat pattern;
+- a line or intention written by the player.
 
-The player chooses references to bring into the evolution:
+The Growth Oracle retrieves relevant history and proposes several forms. A
+validator accepts only effects expressible through legal primitives and within
+the technique's budget.
 
-- another known technique
-- a manual passage
-- a strange book
-- a shrine, statue, oath, or relic
-- a remembered event
-- a line written by the player
-- a recurring pattern from combat history
+```text
+base technique + chosen references + relevant history
+                         |
+                         v
+                  LLM proposals
+                         |
+                         v
+             mechanical validation
+                         |
+                         v
+                player selection
+```
 
-The LLM reads those references alongside the player's history and proposes new evolved forms. Tools validate mechanics before the evolution enters the character file.
+Events provide context. They do not automatically award a new technique.
 
-Example:
+## Technique definition
 
-| Input | Example |
-|---|---|
-| Base technique | Wolf Step |
-| Reference | Fire Palm |
-| Player note | "move after they commit" |
-| History | Dodged arrows, circled beasts, closed distance on fleeing enemies |
-| Proposed evolution | Cinder Wolf Step — shift position and leave an ember afterimage; if struck, empower the next fire technique |
+A technique contains a cost, target rule, range, effect sequence, conditions,
+cooldown, proficiency, and history. Effects come from a bounded vocabulary such
+as damage, guard, heal, move, mark, apply status, remove status, reveal, push,
+pull, counter, summon, or alter terrain.
 
-## Shrine Breakthroughs
+Elements, statuses, and modifiers belong to the shared effect engine. The LLM
+may combine them but may not invent an unresolvable rule.
 
-Shrines, statues, and altars are for deeper progression. They are not the ordinary training loop.
+## Semi-deterministic weapons
 
-A breakthrough can change:
+A weapon has a deterministic body:
 
-- base level or rank
-- element or affinity
-- technique budget
-- passive bonuses
-- vows, curses, or drawbacks
-- allowed weirdness for later evolutions
+- category, grip, range, and damage profile;
+- material and quality;
+- legal techniques and elemental affinities;
+- modifier slots and upgrade budget;
+- ownership and recorded history.
 
-Early breakthroughs should be legible: more mana, stronger body, sharper fire techniques, steadier mind. Later breakthroughs can get stranger: rain strengthens oath techniques, enemies spared by the player carry a mark, shadows remember the last movement, or fear spreads differently through a party.
+An LLM may propose its name, description, visual identity, emerging traits, and
+reforging paths. The weapon validator compiles only legal changes within its
+budget. A remembered weapon may become narratively unique without receiving
+arbitrary statistics.
 
-## Power Types
+## Crafting and reforging
 
-Combat strength matters, but the sandbox fantasy gets stronger when power also means people, places, resources, and legitimacy.
+Crafting consumes known ingredients, tools, stations, and time. Recipes and
+material transformations are deterministic. Experimentation may ask an LLM to
+propose a result, but the crafting system validates ingredients, output type,
+quality range, and modifiers before anything is created.
 
-| Power | What it lets the player do |
-|---|---|
-| Personal strength | Survive dangerous sites, duel rivals, take risks others cannot |
-| Technique mastery | Build a distinct tactical identity from learned forms |
-| Shrine path | Change element, rank, vows, bonuses, and future evolution rules |
-| Reputation | Open doors, attract followers, frighten enemies, shift rumors |
-| Allies | Run missions, hold sites, provide skills, create personal story arcs |
-| Resources | Feed people, pay troops, craft gear, rebuild territory |
-| Territory | Make the map physically reflect the player's rise |
-| Legitimacy | Move from adventurer to recognized leader, founder, or ruler |
+The first slice needs only a few recipes and one reforge path.
 
-## Team Building
+## Broader power
 
-The first "building" system is recruiting and retaining people. A party can become a company; a company can become a faction; a faction can hold territory.
+Power also includes reputation, relationships, allies, resources, territory,
+and legitimacy. These channels matter because they change what the player can
+attempt and how people respond.
 
-Companions have loyalty, fear, ambition, ideology, injury, memory, and personal threads. They are not passive followers — they react to the player's choices, and their stories can diverge or conflict with the player's goals.
-
-Turn-based combat makes this stronger: companions can occupy positions, suffer stress, develop injuries, learn techniques, and create party synergies.
-
-## Territory
-
-Territory starts small and becomes visible. Claiming a shrine, mill, camp, watchtower, or ruined fort is more legible than an abstract faction score.
-
-Local control changes what rumors spread, who patrols roads, who collects taxes, who gets protected, and who resents the player.
-
-## Mechanical Validation
-
-The LLM proposes names, story logic, visuals, and tactical shape. Tools decide what becomes real.
-
-Validation checks:
-
-- every effect maps to a known primitive
-- cost, cooldown, position rules, and target rules fit the technique tier
-- the technique does not duplicate an existing ability
-- the evolution fits the player's current path and shrine breakthroughs
-- strange effects stay within the current weirdness ceiling
-
-Useful primitives for turn-based combat include: damage, guard, dodge, mark, bind, push, pull, reposition, stress damage, stress heal, morale buff, fear pressure, bleed, burn, poison, reveal, summon, terrain change, dialogue unlock, oath condition, cooldown, range, cost, tier, escalation risk.
-
-The creative surface is flexible. The mechanical surface is bounded.
+Shrines and breakthroughs may later alter rank, affinity, vows, drawbacks, and
+the allowed weirdness of future evolutions. They are not required to prove the
+first presentation slice.

@@ -1,55 +1,83 @@
-# Story System
+# Story Oracle
 
-The story system generates playable situations from local pressure. The LLM observes events, detects emerging patterns, and proposes story developments. Validation happens at the tool level — proposed scenes must reference real characters, locations, and established facts.
+The Oracle decides which unresolved pressure deserves attention at a moment
+when the game can stage a scene. It does not write directly into world state,
+move actors illegally, or turn every request into a quest.
 
-## Story Pressure
+## Trigger points
 
-Story pressure is unresolved tension attached to places, people, and factions. The story system surfaces pressure that is local, timely, and connected to prior events.
+The Oracle runs at bounded moments rather than continuously:
 
-Examples of pressure ready to become story:
+- entering a location;
+- beginning or ending a conversation;
+- resting, waiting, or traveling;
+- finishing a battle;
+- reaching a request deadline or learning of a broken promise;
+- completing a regional or major world tick.
 
-- A rivalry forming between the player and a peer.
-- A village ready to rebel against its lord.
-- A faction's legitimacy weakening after a public failure.
-- A companion's loyalty cracking under competing obligations.
-- A rumor reaching the wrong person.
-- A war creating a claimable power vacuum.
+Ordinary movement, schedules, spawning, and combat turns continue without it.
 
-Pressure accumulates from events. When enough pressure builds around a cluster of characters, locations, and factions, the story system proposes a scene. V0 uses the pressure score in [V0 Implementation Spec](implementation-spec.md) to decide whether a pattern stays flavor, becomes a rumor, becomes a candidate scene, or becomes a quest thread.
+## Context
 
-## Story Sifting
+Before requesting a scene, the game assembles:
 
-The LLM reads the event stream and proposes emerging patterns as story threads. Sifting is flexible and LLM-driven — there are no rigid pattern-matching rules.
+- the player's location and current activity;
+- people present or able to communicate;
+- what each participant knows and remembers;
+- recent local events;
+- unresolved requests and commitments;
+- active relationships and faction pressures;
+- available presentation resources and scene limits.
 
-Example: repeated public conflict between the player and Tomas becomes a rivalry thread. A spared bandit plus food shortage plus weak lordship control becomes a recruitment or rebellion thread. The LLM notices these patterns because it reads the full event context, not because a rule fires on specific event types.
+Retrieval narrows history to relevant facts. Canonical state remains outside
+the model.
 
-When a pattern has enough recurrence, stakes, and actors, the story system promotes it into a quest thread (see [Quests & Threads](quests-threads.md)). In V0, promotion requires a pressure score of at least 6 and at least two plausible future choices.
+## Pressure and living threads
 
-## Scene Generation
+Story pressure is unresolved tension attached to people, places, factions, or
+promises. A repeated conflict, an unanswered request, a rumor reaching the
+wrong person, or a Dungeon surge may become a living thread.
 
-A scene begins when the story system identifies actionable pressure at the player's current location. The system:
+Threads are internal context, not player-facing task objects. The Oracle may
+connect several events into a rivalry, rescue, scarcity, legitimacy, or
+betrayal thread when the connection creates a meaningful future choice.
 
-1. Reads the player's location, present characters, recent events, and active pressures.
-2. Identifies which pressure is most ready to surface.
-3. Generates a scene with narration, NPC actions, and player options.
-4. Calls tools to record the resulting events.
+See [People, Requests, and Threads](requests-threads.md) for the underlying
+model.
 
-Scenes are grounded by validation checks:
+## Scene proposal
 
-| Check | Question |
+The Oracle proposes:
+
+1. the pressure to surface;
+2. the participants and their immediate intentions;
+3. the scene's dramatic turn;
+4. dialogue or a dialogue brief;
+5. Director cues the client can perform;
+6. legal simulation commands to request if the scene changes state;
+7. several player responses when a choice is appropriate.
+
+The proposal remains provisional until validated.
+
+## Validation
+
+| Check | Required answer |
 |---|---|
-| Presence | Is the NPC actually here, reachable, or able to send a message? |
-| Knowledge | Does this character know the fact they are acting on? |
-| Rules | Are rewards, injuries, locations, and state changes legal? |
-| Causality | Does the scene follow from prior events and current pressure? |
-| Scope | Is the scene local enough for the current player location? |
+| Presence | Is each participant present, reachable, or using a valid messenger? |
+| Knowledge | Does each person know the facts behind their reaction? |
+| Causality | Does the scene follow from recorded events and current pressure? |
+| Legality | Are proposed state changes expressible through valid commands? |
+| Character | Does the action serve the person's goals, memory, and relationship state? |
+| Scope | Can the current presentation perform the scene clearly? |
+| Repetition | Has a similar beat already fired too recently? |
 
-These checks are enforced by the tools. If `write_event` receives a reference to a character who is not present, the tool rejects the call.
+The game may repair one invalid proposal. If it still fails, an authored or
+deterministic fallback preserves flow.
 
-V0 validation is intentionally concrete: every referenced entity must exist, every NPC reaction must be backed by witnessed events or rumor knowledge, and every scene must use reachable locations or a message carrier.
+## What the Oracle may create
 
-## Content Building
-
-The story system also builds new world content from validated primitives. In the PoC, this means quests, rumors, and local scenes. The same pattern extends to spells, techniques, artifacts, faction projects, settlements, and companion arcs.
-
-The LLM proposes structure and meaning. The tools validate it against the current world state and either accept or reject the proposal.
+The Oracle can create meaning around validated primitives: conversations,
+requests, rumors, living threads, faction initiatives, unusual Dungeon events,
+technique proposals, and weapon histories. It cannot invent an entity as
+already present, grant an illegal reward, or declare a consequence that the
+simulation did not record.

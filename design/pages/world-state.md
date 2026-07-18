@@ -1,101 +1,96 @@
-# World State
+# World State and Memory
 
-World state lives as files in a structured directory. The LLM reads prose and data files directly. An index (FTS + vector) provides search when the agent needs to find relevant context across the world. Tools are the only writers for canonical state.
+Canonical state records facts independently of any model's context. LLMs may
+read selected state and propose commands; only deterministic tools may change
+what the world treats as true.
 
-## Directory Structure
+## State shape
 
-```
-world/
-  world.md              # setting overview, current era, active pressures
-  clock.md              # current day/hour, pending ticks
+The storage implementation remains open, but the world needs inspectable
+records for:
 
-  areas/
-    greyford/
-      area.md            # description, control, exits, tags
-      recent-events.md   # what happened here lately
-      rumors.md          # what information has reached this place
-      npcs-present.md    # who is here right now
-      districts/
-        market/
-        church-hospital/
-        adventurers-guild/
-
-    north-mill/
-      area.md
-      recent-events.md
-
-    red-sash-camp/
-    abandoned-shrine/
-    wolf-cave/
-    ruined-watchtower/
-
-  characters/
-    player.md            # stats, inventory, skills, history
-    mara-guild-clerk.md
-    tomas-rival.md
-    sister-elian.md
-
-  factions/
-    vael-lordship.md
-    church-of-the-seal.md
-    red-sash-bandits.md
-
-  quests/
-    reclaim-north-mill.md
-
-  events/
-    log.jsonl            # canonical append-only event log
-    log.md               # readable projection of what happened
+```text
+world
+  clock and global pressures
+  overworld seed and generated areas
+  Dungeon definitions and active instances
+  characters
+    location, goals, plans, relationships
+    knowledge, memories, requests, commitments
+  factions
+  items, weapons, and inventories
+  techniques and proficiency
+  living threads
+  events
 ```
 
-## Design Principles
+Structured files are useful because agents and developers can inspect them
+directly. A database may own runtime queries later. Neither choice changes the
+command and event boundary.
 
-> The file system is the world. If the LLM can read a file, it knows that thing. If no file exists, that thing has not been established.
+## Events establish history
 
-Files are prose by default. The LLM reads them as context and writes narration in the same format. Structured data (stats, coordinates, relationship values) lives in fenced blocks within markdown files or in small data files where precision matters.
+Every consequential change produces an append-only event. An event includes:
 
-State mutations happen via tool calls, not by the LLM editing files directly. When the `move_character` tool fires, it updates the relevant area files and the character file. When `write_event` fires, it appends to the canonical JSONL event log and rebuilds readable projections.
+- time and location;
+- actors and witnesses;
+- visibility;
+- the command that produced it;
+- factual consequences;
+- tags or references needed for later retrieval.
 
-The implementation-facing schemas are defined in [V0 Implementation Spec](implementation-spec.md).
+Example:
 
-## Index Layer
-
-An index sits alongside the files to support retrieval:
-
-| Index type | Purpose |
-|---|---|
-| Full-text search | Find events, characters, or locations by name or keyword |
-| Vector search | Find thematically related content (e.g., "betrayal" surfaces relevant events even if the word was never used) |
-
-The index is a derived projection of the files. It can be rebuilt from the directory at any time. It is never the source of truth.
-
-## Events as Truth
-
-Everything important that happens becomes an event in the log. Events are how the world remembers and how future story generation stays grounded. `events/log.jsonl` is canonical; `events/log.md`, area recent-event files, and index entries are rebuildable projections.
-
-A typical event entry in `events/log.md`:
-
-```
-### Day 3, Hour 13 — Public Confrontation
-
-**Location:** Greyford Market
-**Actors:** Player, Tomas (rival adventurer)
-**Factions involved:** Adventurers Guild
-**Visibility:** Public
-
-Tomas accused the player of taking Guild work above their rank.
-Relationship with Tomas decreased. Rumor "arrogant newcomer" began spreading.
+```json
+{
+  "id": "evt-0042",
+  "time": "day-3-18:10",
+  "type": "commitment_unfulfilled",
+  "location_id": "road-healer-camp",
+  "actor_ids": ["player"],
+  "witness_ids": [],
+  "visibility": "private",
+  "summary": "The warning had not reached the road healer before sundown.",
+  "refs": ["request-feverroot-warning"]
+}
 ```
 
-Events are append-only. They reference real characters, locations, and factions. The story system reads them to detect patterns and propose new developments.
+The event records the missed outcome. It does not assert that the requester
+knows, forgives, or condemns the player.
 
-## Browsing Axes
+## Knowledge and memory
 
-The directory supports two ways of understanding the world:
+World truth and character knowledge are separate.
 
-| Axis | Question | Example path |
-|---|---|---|
-| Area | What is happening at this place? | `areas/greyford/recent-events.md` |
-| Quest | What story thread connects these events? | `quests/reclaim-north-mill.md` |
-| Character | What does this person know and want? | `characters/mara-guild-clerk.md` |
-| Faction | What is this group doing and why? | `factions/vael-lordship.md` |
+A person may react to a fact only if they:
+
+- experienced it;
+- witnessed it;
+- received it through dialogue, a message, or a rumor;
+- inferred it through a validated reasoning step.
+
+Character memory stores references to known events plus personal interpretation
+when that interpretation matters. Relationships may carry numeric axes for
+deterministic rules, but remembered reasons remain available to dialogue and
+the Oracle.
+
+## Derived indexes
+
+Full-text and semantic indexes help retrieve events, people, locations, and
+themes. They are rebuildable projections, never canonical state. A failed or
+stale index must not change the truth of the world.
+
+Useful retrieval questions include:
+
+- What happened here recently?
+- What does this person know about the player?
+- Which promises remain unresolved?
+- Which events connect these people?
+- What history is relevant to this technique or weapon?
+
+## Save and replay
+
+A save contains the canonical state, content versions, random seeds, and event
+position needed to continue. Replaying the same commands from the same snapshot
+must reproduce the same deterministic results. LLM prose may differ unless it
+was recorded as an accepted scene artifact; state consequences may not.

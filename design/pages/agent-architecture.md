@@ -1,68 +1,114 @@
-# Agent Architecture
+# Control Architecture
 
-The game engine is an LLM agent loop over a structured file system. The LLM reads world state from files, writes narration as free text, and calls tools when state needs to change. The LLM does not directly edit canonical world state.
+Living RPG gives authored scripts, deterministic AI, players, and LLMs access
+to the same validated game commands. No controller may mutate canonical state
+or manipulate presentation internals directly.
 
-## Core Loop
+## Boundary
 
-```
-read world state (files + index)
-    → observe (what changed, what's nearby, what's pressured)
-    → think/write (narration, dialogue, scene prose)
-    → call tools (state mutations: move character, write event, update relationship)
-    → loop
-```
-
-The LLM's primary output is prose. Structured JSON is only used for state mutations via tool calls. JSON mode or constrained decoding handles format validity when structured output is needed.
-
-## Agents and Skills
-
-The PoC is a meridian package — a set of agents and skills, following the same pattern as the creative-writing-skills plugin. Agents and skills map from creative writing to game engine:
-
-| Creative writing | Game engine |
-|---|---|
-| Muse (session lead, stance switching) | Game director (loop, observe, dispatch) |
-| Writer (prose from briefs) | Narrator (prose from world state) |
-| Critic (adversarial reading) | Validator (consistency checking) |
-| Character-sim (in-character conversation) | NPC agents (interactive characters) |
-| KB (durable story memory) | World state (characters, factions, locations) |
-| Story memory (fact extraction) | Event log (what happened) |
-| Vocab / shared-dao | World lore, canonical terms |
-
-## State Mutations via Tools
-
-State changes happen through tool calls. The LLM proposes a call; the tool validates and executes it. Tools own canonical mutation, derived projections, and index updates.
-
-```
-move_character(character_id, destination_area)
-write_event(event)
-change_relationship(source_id, target_id, delta, reason)
-spread_rumor(rumor_id, from_area, to_area)
-claim_site(faction_id, area_id)
-create_quest_thread(quest)
+```text
+controllers
+  player input | authored script | deterministic AI | LLM adapter
+                              |
+                              v
+                    validated commands
+                              |
+                              v
+                    deterministic state
+                              |
+                              v
+                     canonical events
+                       /           \
+                      v             v
+              presentation      world memory
 ```
 
-If a tool call references an invalid location, a character who is not present, or a faction that does not exist, the tool rejects it. The LLM retries once on failure, then falls back to a template appropriate to the scene type.
+The separation makes each LLM optional at runtime without making LLM direction
+an afterthought in the product.
 
-The exact V0 schemas and tool contracts are defined in [V0 Implementation Spec](implementation-spec.md).
+## Three responsibilities
 
-## Platform and Model Policies
+### Deterministic simulation
 
-The meridian package targets multiple platforms (opencode, Claude Code, etc.) via model policies. The default play experience runs on open platforms.
+The simulation decides what is legal and what happened. It owns movement,
+time, schedules, inventory, spawning, combat resolution, effects, technique
+budgets, weapon budgets, and canonical state.
 
-A setup skill provides instructions for configuring local models (Ollama, llama.cpp) as an alternative backend. The same agents and skills work regardless of which model serves the requests.
+### LLM direction
 
-| Concern | Approach |
-|---|---|
-| Model selection | Model policies per platform — cloud default, local optional |
-| JSON validity | Constrained decoding (JSON mode) |
-| Semantic validation | Tool-level checks (presence, knowledge, rules) |
-| Failure handling | Retry once, then graceful degradation (template fallback) |
+LLMs interpret context and propose meaningful choices:
 
-## What the Architecture Replaces
+- **Story Oracle:** selects pressure and proposes a scene at defined trigger
+  points.
+- **Character interaction:** writes or selects dialogue from the character's
+  knowledge, memory, goals, and emotional state.
+- **Battle controller:** chooses among legal actions. Deterministic AI is the
+  fallback.
+- **Growth Oracle:** proposes technique evolutions, weapon traits, and reforging
+  paths from player-selected references and history.
+- **Story-writing adapter:** turns separately produced story material into
+  validated scene beats and Director cues.
 
-The old design described ten named code modules (MapEngine, LocationTracker, StorySifter, StoryDirector, Narrator, Validator, ContentCompiler, etc.) connected in a rigid pipeline. The new architecture replaces all of them with four components:
+### Presentation
 
-1. **Files** — World state as a structured directory of prose and data files.
-2. **Index** — FTS + vector search over those files for retrieval.
-3. **Tools** — Named functions for state mutations, each with built-in validation.
-4. **Loop** — The LLM agent reads, thinks, writes, calls tools, and repeats.
+The presentation performs intent. It owns animation timing, pathfinding,
+camera movement, dialogue layout, portraits, sound, transitions, and combat
+effects. It observes events but does not invent state changes.
+
+## Two command surfaces
+
+Simulation commands change the world:
+
+```text
+move_character
+advance_time
+transfer_item
+record_request
+record_commitment
+apply_combat_action
+record_training
+evolve_technique
+reforge_weapon
+write_event
+```
+
+Director commands stage what the player sees:
+
+```text
+speak
+move_to
+face
+emote
+focus_camera
+play_animation
+offer_choices
+begin_encounter
+transition_area
+```
+
+A Director command cannot silently create an item, move money, change a
+relationship, or deal damage. Those changes require simulation commands.
+
+## LLM request lifecycle
+
+Every LLM lane follows the same envelope:
+
+1. A deterministic trigger requests a proposal.
+2. A context builder retrieves only relevant state and memories.
+3. The model returns a structured proposal.
+4. Schema validation checks its shape.
+5. Domain validation checks presence, knowledge, legality, budget, and scope.
+6. Accepted commands execute and emit events.
+7. Invalid proposals may be repaired once, then fall back deterministically.
+8. Inputs, outputs, validation failures, cost, and latency remain inspectable.
+
+## State and retrieval
+
+Canonical state may be stored in structured files or a database, but it must
+remain inspectable and independent of model context. An append-only event log
+records what happened. Full-text and semantic indexes are rebuildable
+projections used to retrieve relevant history; they are never sources of truth.
+
+TypeScript is the current implementation preference. The final client engine,
+backend topology, and model providers remain open until the presentation and
+Director spike has been evaluated.

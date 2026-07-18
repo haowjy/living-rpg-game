@@ -1,34 +1,47 @@
-# Living Story Sandbox RPG Systems Bundle
+# Living RPG Design
 
-This bundle has been updated around the current north star:
+Living RPG is a presentation-first, LLM-directed fantasy RPG. The immediate
+goal is a polished 2D/2.5D stage that deterministic code, authored scripts, and
+LLMs can all direct through the same commands.
 
-**A living fantasy sandbox where the world remembers what the player does, techniques grow through simple proficiency, mastered forms can evolve through player-chosen references, and shrines reshape the player's deeper path.**
+The project follows one boundary:
 
-## What changed
+> The LLM proposes or interprets what is meaningful. Deterministic code
+> establishes what is true. The presentation makes it felt.
 
-- The old Greyford-first framing is no longer the public anchor. The first slice still needs a small authored region, but placeholder LLM-generated names should not define the pitch.
-- The old event-triggered insight pipeline is replaced. Events are context, not automatic upgrade triggers.
-- Training is simple: use a technique, practice it, study a manual, or train with a teacher to raise proficiency.
-- Technique evolution happens at proficiency thresholds. The player chooses references — another technique, a manual passage, a strange book, a shrine, a memory, or a written idea — and the LLM reads those references plus history to propose evolutions.
-- Shrines, statues, and altars are breakthrough sites. They upgrade the player's base path, element, bonuses, vows/curses, and future weirdness ceiling.
-- V1 combat direction has shifted away from real-time action. The target is turn-based party combat, closer to Darkest Dungeon: positions, turns, stress, injuries, marks, status effects, and named techniques.
-- The architecture assumes deterministic state plus LLM-assisted narration/proposals, not an LLM acting as the entire game.
-- The Minecraft mod path remains rejected. Minecraft is a useful sandbox reference, not the implementation target.
-- The information hierarchy should keep player-facing fantasy separate from implementation detail.
+## Read in this order
 
-## Main pages
+| Page | Question it answers |
+|---|---|
+| [Overview](pages/overview.md) | What game are we making? |
+| [Prototype](pages/prototype.md) | What must the first playable slice prove? |
+| [Agent architecture](pages/agent-architecture.md) | How do deterministic systems and LLMs share control? |
+| [Story system](pages/story-system.md) | How does the Oracle turn remembered events into scenes? |
+| [People, requests, and threads](pages/requests-threads.md) | What replaces a conventional quest log? |
+| [World state](pages/world-state.md) | What does the world remember, and who may change it? |
+| [Clock and agents](pages/clock-agents.md) | How does the world move without the player? |
+| [World generation and Dungeons](pages/worldgen-sites.md) | How do persistent overworld space and recurring Dungeon space differ? |
+| [Growth and power](pages/growth-power.md) | How do techniques, weapons, and broader power develop? |
+| [Player character](pages/player-character.md) | What defines the player's mechanical and social identity? |
+| [Implementation spec](pages/implementation-spec.md) | What are the first slice's concrete contracts? |
+| [Decisions](pages/decisions.md) | Which choices are settled, superseded, or open? |
 
-- `pages/overview.md` — answer-first overview and north star.
-- `pages/story-sandbox.md` — story as the primary attractor.
-- `pages/agent-architecture.md` — deterministic runtime and LLM boundary.
-- `pages/world-state.md` — canonical files, event log, and searchable projections.
-- `pages/implementation-spec.md` — V0 state schemas, tool contracts, validation rules, and scenario tests.
-- `pages/story-system.md` — story pressure, sifting, scene generation, and validation.
-- `pages/clock-agents.md` — layered world clock and named background agents.
-- `pages/quests-threads.md` — quests as living story threads.
-- `pages/worldgen-sites.md` — continuous world generation and site meaning.
-- `pages/growth-power.md` — technique proficiency, evolution, shrines, and broader power paths.
-- `pages/player-character.md` — player stats, skills, techniques, equipment, and progression.
-- `pages/prototype.md` — first playable text PoC.
-- `pages/decisions.md` — canonical decisions that supersede conflicts elsewhere.
-- `pages/research-notes.md` — compact research takeaways.
+## Current direction
+
+- Presentation comes first. The target is a mobile-capable,
+  Pokémon Black/White-inspired 2D/2.5D game with real-time exploration,
+  expressive dialogue, and deterministic turn-based combat.
+- The story is chosen at meaningful moments by an LLM Oracle. Movement, time,
+  legal actions, combat resolution, and canonical state remain deterministic.
+- People make requests and remember promises. The player never receives a
+  conventional objective checklist or `Quest Failed` notification.
+- Techniques and weapons have deterministic mechanical bodies. LLMs may propose
+  names, meaning, combinations, and upgrade paths within validated budgets.
+- The overworld is generated once and persists. Dungeons are special spaces
+  that generate repeatedly and spawn monsters under deterministic rules.
+- The MVP is about people. Spirits remain possible later but are outside the
+  first proof.
+
+The [research report](research_report.md), [research notes](pages/research-notes.md),
+and [image prompts](image_prompts.md) are source material, not current product
+requirements. The decision log wins when they conflict with active design.

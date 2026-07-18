@@ -1,41 +1,67 @@
-# Living RPG Engine
+# Living RPG
 
-Game engine for **Living Story Sandbox RPG** — an LLM-assisted fantasy sandbox with file-backed world state, deterministic tools, technique mastery, shrine breakthroughs, and turn-based RPG combat.
+Living RPG is a presentation-first fantasy RPG built for LLM direction. The
+player explores a persistent 2D/2.5D world, deals with people who remember what
+happened, enters repeatedly generated Dungeons, fights deterministic turn-based
+battles, and develops techniques and weapons shaped by their history.
 
-See the [project site](https://haowjy.github.io/living-rpg-public/) and [design docs](design/) for full context.
+The project follows one boundary:
+
+> The LLM proposes or interprets what is meaningful. Deterministic code
+> establishes what is true. The presentation makes it felt.
+
+## Current target
+
+The first slice is a polished, mobile-capable stage with:
+
+- top-down movement and expressive dialogue presentation;
+- a narrow Director command vocabulary usable by scripts and LLMs;
+- deterministic state, time, combat, spawning, save/load, and replay;
+- people with knowledge, memories, requests, and commitments;
+- one procedural Dungeon and one remembered consequence;
+- validated technique evolution and semi-deterministic weapon upgrades.
+
+There is no conventional quest checklist. People ask for things, the world
+continues, and later behavior reflects what the player did or forgot.
 
 ## Architecture
 
-The engine is a set of specialized agents orchestrated by a game director. Agents read world state from files and propose actions; deterministic tools validate and write canonical mutations.
-
 ```text
-game-director          Orchestrates turns, routes to sub-agents
-├── narrator           Prose generation from world state + player action
-├── validator          Checks proposed state changes for consistency
-├── npc-agent          Drives NPC behavior, dialogue, goals
-├── world-ticker       Advances clocks, weather, NPC schedules
-└── technique-engine   Tracks learned forms, proficiency, evolution, breakthroughs
+player input | authored script | deterministic AI | LLM adapter
+                              |
+                              v
+                    validated commands
+                              |
+                              v
+                    deterministic state
+                              |
+                              v
+                     canonical events
+                       /           \
+                      v             v
+              presentation      world memory
 ```
 
-## Repo layout
+Every LLM path has structured proposals, validation, traceability, and a
+deterministic fallback. LLMs never mutate canonical state or control movement
+and animation frame by frame.
 
-```text
-agents/         Agent definitions (system prompts, tool configs)
-tools/          Tools for validated world-state mutation and projection rebuilds
-world-state/    Runtime world files (chunks, NPCs, player, clocks)
-  templates/    Prefab templates for worldgen (shrine, road, ruin, camp, etc.)
-skills/         Claude Code skills for gameplay modes
-tests/          Scenario tests (replay a session, check state consistency)
-```
+## Repository
 
-## V0 target
+| Path | Purpose |
+|---|---|
+| `design/` | Current product direction, system design, and implementation contracts |
+| `godot/` | Existing deterministic game and presentation prototype |
+| `docs/` | Workflow and prototype handoff documentation |
+| `agents/`, `tools/`, `world-state/`, `tests/` | Reserved LLM-engine surfaces; intentionally empty until implementation direction settles |
 
-Terminal-based play via opencode/Claude Code. The first slice is a small authored starting region with a safe hub, several connected sites, 5 named NPCs, at least one manual/teacher, one shrine breakthrough, core tools, scenario tests, and 30-60 minutes of playable story.
+TypeScript is the current preference for the Director protocol and future
+implementation, but no final framework has been ratified. See the
+[design overview](design/pages/overview.md), [first slice](design/pages/prototype.md),
+and [decision log](design/pages/decisions.md).
 
-V0 combat is narrative turn resolution. V1 should move toward visual turn-based party combat — closer to Darkest Dungeon than an action RPG.
+Related work:
 
-## Related repos
-
-- [living-rpg-public](https://github.com/haowjy/living-rpg-public) — project site + design docs
-- [creative-writing-skills](https://github.com/haowjy/creative-writing-skills) — narrative agent foundation
-- [meridian-prompter](https://github.com/haowjy/meridian-prompter) — prompt engineering toolkit
+- [living-rpg-public](https://github.com/haowjy/living-rpg-public)
+- [creative-writing-skills](https://github.com/haowjy/creative-writing-skills)
+- [meridian-prompter](https://github.com/haowjy/meridian-prompter)

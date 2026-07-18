@@ -1,411 +1,293 @@
-# V0 Implementation Spec
+# First Slice Implementation Spec
 
-This page is the build contract for the first playable prototype. It turns the design into concrete state files, tool contracts, validation rules, and a 30-60 minute starting-region happy path.
+This document defines the contracts needed to prove the presentation-first,
+Oracle-directable game. It does not choose a final engine or require a complete
+story Oracle.
+
+## Success condition
+
+One small location, one request, one Dungeon expedition, one deterministic
+battle, and one personalized upgrade must form a coherent 20–30 minute play
+sequence. The same scene can be driven by an authored script or a structured
+LLM request without giving either direct access to state or presentation
+internals.
 
 ## Scope
 
-V0 is a terminal-playable agent package with a small deterministic tool layer. The LLM writes narration and proposes actions. Tools own all state mutation, validation, indexing, and replayable logs.
+### Required
 
-In scope:
+- Mobile-capable 2D/2.5D exploration and dialogue presentation.
+- One settlement exterior, one interior, and one Dungeon theme.
+- Player plus 4–5 named people.
+- Commands, canonical events, seeded randomness, save/load, and replay.
+- Time passage, schedules, knowledge, memories, requests, and commitments.
+- Deterministic turn-based combat with a fallback enemy controller.
+- Effects, elements, statuses, modifiers, several techniques, and one weapon.
+- One technique evolution or weapon reforge through a validated proposal.
+- Director console, state inspector, event viewer, and LLM trace.
 
-- One small authored starting region plus 6-8 connected sites.
-- Player, 5 named NPC agents, and lightweight background NPCs.
-- Location movement, event logging, relationships, rumors, quest threads, site control, technique proficiency, technique evolution, and shrine breakthroughs.
-- Full-text search over world files. Vector search can be stubbed with keyword search until the first play loop works.
-- Scenario tests that replay scripted sessions and verify world-state consistency.
+### Deferred
 
-Out of scope:
+- A large autonomous Oracle.
+- A simulated continent or full economy.
+- Multiple Dungeon themes and final regeneration rules.
+- Spirits, pet collection, or spirit-centered combat.
+- Large-scale faction and territory management.
+- Final framework commitment.
 
-- Custom visual client.
-- Real-time combat.
-- Full visual turn-based combat UI.
-- Procedural tile chunks.
-- Fully simulated economy.
-- Continental-scale NPC simulation.
-
-## Canonical State
-
-The file system is the source of truth. The index is derived and rebuildable. Agents may read files, but only tools may edit canonical files.
+## Runtime boundary
 
 ```text
-world/
-  manifest.json
-  world.md
-  clock.json
-  areas/
-  characters/
-  factions/
-  quests/
-  rumors/
-  techniques/
-  shrines/
-  events/log.jsonl
-  events/log.md
-  index/
+input controller
+  player | script | deterministic AI | LLM adapter
+                         |
+                         v
+                 command validation
+                         |
+                         v
+              deterministic simulation
+                         |
+                         v
+                  canonical events
+                   /           \
+                  v             v
+          presentation       world memory
 ```
 
-`log.jsonl` is canonical for events. `log.md` is a readable projection rebuilt from it.
+Controllers express intent. The simulation decides what is legal and records
+the result. Presentation reacts to accepted intent and canonical events.
 
-## Entity Schemas
+## Core state
 
-Use markdown for prose plus one fenced JSON block for machine state. Tools parse the JSON block and preserve surrounding prose when updating.
+The storage implementation may be files, a database, or both. It must expose
+inspectable, serializable records equivalent to:
 
-### Area
-
-```json
-{
-  "id": "market-road",
-  "name": "Market Road",
-  "kind": "road_hub",
-  "parent_area_id": "starting-region",
-  "exits": ["old-shrine", "town-gate", "mill-road", "river-crossing"],
-  "control": {"faction_id": "local-authority", "strength": 3},
-  "danger": 1,
-  "tags": ["public", "trade", "rumor_hub"],
-  "present_character_ids": ["guild-clerk", "rival-adventurer"],
-  "known_rumor_ids": [],
-  "active_pressure_ids": []
+```ts
+interface GameState {
+  version: number
+  seed: string
+  clock: WorldClock
+  playerId: EntityId
+  characters: Record<EntityId, CharacterState>
+  areas: Record<EntityId, AreaState>
+  dungeonDefinitions: Record<EntityId, DungeonDefinition>
+  activeDungeon?: DungeonInstance
+  items: Record<EntityId, ItemInstance>
+  techniques: Record<EntityId, TechniqueState>
+  requests: Record<EntityId, RequestState>
+  commitments: Record<EntityId, CommitmentState>
+  threads: Record<EntityId, ThreadState>
+  combat?: CombatState
+  eventCursor: number
 }
 ```
 
-Validation rules:
+Every entity has a stable ID. Every state change comes from a validated command
+and emits one or more append-only events.
 
-- Every exit must reference an existing area.
-- `present_character_ids` must match character `location_area_id`.
-- `control.faction_id` must reference an existing faction.
-- `danger` is 0-5 in V0.
+## Simulation commands
 
-### Character
+The first slice needs a small command set:
 
-```json
-{
-  "id": "rival-adventurer",
-  "name": "Rival Adventurer",
-  "kind": "named_npc",
-  "location_area_id": "market-road",
-  "faction_id": "adventurers-guild",
-  "stats": {"str": 11, "dex": 13, "con": 10, "int": 10, "wis": 9, "cha": 12, "hp": 18, "level": 1},
-  "relationships": {"player": -1},
-  "knowledge_event_ids": [],
-  "known_rumor_ids": [],
-  "goals": ["gain guild status", "avoid public humiliation"],
-  "flags": []
+```text
+move_character(character_id, destination_id)
+advance_time(duration, reason)
+interact(actor_id, target_id)
+transfer_item(source_id, target_id, item_id, quantity)
+record_request(request)
+record_commitment(commitment)
+share_information(source_id, recipient_id, event_or_rumor_id)
+begin_dungeon(definition_id, seed)
+spawn_monster(dungeon_id, spawn_zone_id)
+begin_combat(participants)
+submit_combat_action(actor_id, action)
+record_training(character_id, technique_id, source)
+evolve_technique(proposal)
+reforge_weapon(proposal)
+write_event(event)
+```
+
+Commands return a success result with emitted event IDs or a typed failure with
+enough information for a controller to recover.
+
+## Director commands
+
+Director commands perform a scene without changing canonical facts:
+
+```text
+focus_camera(target_id)
+speak(speaker_id, text, expression)
+move_to(actor_id, destination_id)
+face(actor_id, target_id)
+emote(actor_id, cue)
+play_animation(actor_id, animation_id)
+offer_choices(choice_set)
+show_effect(effect_id, targets)
+begin_encounter(encounter_id)
+transition_area(area_id, entry_id)
+```
+
+If a Director command implies movement, the presentation requests or consumes
+an accepted simulation movement command. It may not teleport a canonical actor
+for convenience.
+
+## Events and knowledge
+
+An event records time, location, actors, witnesses, visibility, factual
+consequences, and references to the command that produced it.
+
+```ts
+interface GameEvent {
+  id: EntityId
+  time: WorldTime
+  type: string
+  locationId?: EntityId
+  actorIds: EntityId[]
+  witnessIds: EntityId[]
+  visibility: "private" | "witnessed" | "public"
+  summary: string
+  consequences: Consequence[]
+  refs: EntityId[]
 }
 ```
 
-Validation rules:
+Characters may react only to events they experienced, witnessed, received, or
+legally inferred. The event log records world truth; character knowledge and
+memory record their access to it.
 
-- Character location must exist.
-- Named NPCs need at least one goal.
-- Relationship values are integers from -5 to 5.
-- A character can react only to events in `knowledge_event_ids`, rumors in `known_rumor_ids`, events where they were an actor or witness, or public events in their current area.
+## Requests and commitments
 
-### Technique
+A request records who asked whom, what was asked, when, witnesses, and any
+understood urgency. A commitment is separate and requires clear agreement.
 
-```json
-{
-  "id": "wolf-step",
-  "name": "Wolf Step",
-  "owner_character_id": "player",
-  "source": {"kind": "manual", "id": "hunter-footwork-manual"},
-  "proficiency": {
-    "level": "competent",
-    "xp": 42,
-    "next_level_xp": 60
-  },
-  "combat_shape": {
-    "kind": "movement",
-    "position_delta": 1,
-    "target_rule": "self",
-    "cooldown": 1,
-    "effects": ["dodge_bonus"]
-  },
-  "evolution_history": [],
-  "tags": ["movement", "evasion", "beast_style"]
+The system never creates a player-facing task automatically. Time and events
+determine whether the requested outcome occurred. The Oracle or fallback rules
+decide whether the result deserves a later scene.
+
+## Time and schedules
+
+Movement, conversation, rest, crafting, training, and Dungeon exploration
+consume deterministic amounts of time. Advancing time:
+
+1. updates the clock;
+2. executes eligible scheduled actions;
+3. resolves delayed messages and travel;
+4. updates Dungeon spawn eligibility;
+5. emits consequential events;
+6. checks whether an Oracle trigger point has been reached.
+
+The first slice needs schedules only for its named cast.
+
+## Dungeon generation
+
+The overworld area is generated once and saved. A Dungeon instance is generated
+from a definition and seed.
+
+```ts
+interface DungeonDefinition {
+  id: EntityId
+  theme: string
+  danger: number
+  terrainSetId: EntityId
+  roomPieceIds: EntityId[]
+  monsterTableId: EntityId
+  spawnBudget: number
+  requiredLandmarks: string[]
 }
 ```
 
-Validation rules:
-
-- Owner character must exist.
-- Source must reference an existing manual, teacher, enemy observation, relic, shrine, or experiment event.
-- Proficiency level must be one of: `untrained`, `novice`, `competent`, `expert`, `master`.
-- Combat effects must map to known primitives.
-
-### Shrine
-
-```json
-{
-  "id": "old-road-shrine",
-  "name": "Old Road Shrine",
-  "location_area_id": "old-shrine",
-  "allowed_breakthroughs": ["first-ember", "rain-vow", "stone-body"],
-  "requirements": {
-    "minimum_level": 1,
-    "required_event_tags": ["survived_danger"]
-  },
-  "weirdness_ceiling": 1,
-  "tags": ["shrine", "road", "forgotten_god"]
-}
-```
-
-Validation rules:
-
-- Shrine location must exist.
-- Breakthrough ids must map to valid breakthrough definitions.
-- Weirdness ceiling is 0-5.
-
-### Event
-
-`events/log.jsonl` stores one JSON object per line:
-
-```json
-{
-  "id": "evt-0007",
-  "day": 3,
-  "hour": 13,
-  "type": "public_confrontation",
-  "location_area_id": "market-road",
-  "actor_ids": ["player", "rival-adventurer"],
-  "witness_character_ids": ["guild-clerk"],
-  "faction_ids": ["adventurers-guild"],
-  "visibility": "public",
-  "summary": "The rival adventurer accused the player of taking guild work above their rank.",
-  "consequences": [
-    {"kind": "relationship_delta", "source_id": "rival-adventurer", "target_id": "player", "delta": -1},
-    {"kind": "rumor_created", "rumor_id": "rumor-arrogant-newcomer"}
-  ],
-  "tags": ["rivalry", "guild", "reputation"]
-}
-```
-
-Validation rules:
-
-- Events are append-only.
-- Every referenced entity must exist.
-- Non-public events are known only to actors, witnesses, and later rumor recipients.
-- Event time cannot move backward.
-
-## Tool Contracts
-
-Tools return either `{ "ok": true, "changes": [...] }` or `{ "ok": false, "error": "...", "retry_hint": "..." }`.
-
-### `move_character(character_id, destination_area_id, reason)`
-
-Checks:
-
-- Character and destination exist.
-- Destination is adjacent to the character's current area unless another tool grants travel.
-- Character is not blocked by injury, captivity, or scene lock.
-
-Effects:
-
-- Updates source and destination `present_character_ids`.
-- Updates character `location_area_id`.
-- Writes a movement event unless `silent` is explicitly true for background ticks.
-
-### `write_event(event)`
-
-Checks:
-
-- Required event fields are present.
-- Actors are present, reachable, or acting through a message.
-- Visibility and witness rules are coherent.
-- Consequences reference legal tool effect kinds.
-
-Effects:
-
-- Appends to `events/log.jsonl`.
-- Rebuilds `events/log.md`.
-- Adds knowledge to actors and witnesses.
-- Updates area recent events.
-
-### `change_relationship(source_id, target_id, delta, reason_event_id)`
-
-Checks:
-
-- Source and target exist.
-- Delta is -2 to 2 per call.
-- Reason event exists and is known to the source, unless the source directly witnessed it.
-
-Effects:
-
-- Clamps relationship to -5 to 5.
-- Writes a relationship consequence event or attaches to an existing event.
-
-### `spread_rumor(rumor_id, from_area_id, to_area_id, carrier_id)`
-
-Checks:
-
-- Rumor exists in `from_area_id`.
-- Areas are adjacent or connected by a known travel route.
-- Carrier knows the rumor and can plausibly travel or send word.
-
-Effects:
-
-- Adds rumor to destination area.
-- Adds rumor knowledge to present characters based on visibility.
-- Increases or decays rumor heat.
-
-### `claim_site(faction_id, area_id, strength, reason_event_id)`
-
-Checks:
-
-- Faction and area exist.
-- Reason event supports the control change.
-- Strength is 1-5.
-
-Effects:
-
-- Updates area control.
-- Updates faction controlled areas.
-- Writes a control-change event.
-
-### `create_quest_thread(quest)`
-
-Checks:
-
-- Source events exist.
-- Involved entities exist.
-- Pressure score is at least 4.
-- There are at least two plausible future choices.
-
-Effects:
-
-- Creates or updates a quest file.
-- Links quest id into involved areas, characters, and factions.
-
-### `record_training(character_id, technique_id, source, amount, context_event_id)`
-
-Checks:
-
-- Character and technique exist.
-- Character owns or can train the technique.
-- Source is legal: use, practice, manual, teacher, sparring, combat, exploration.
-- Context event exists unless the training is a quiet downtime action.
-
-Effects:
-
-- Adds proficiency XP.
-- Promotes proficiency level if threshold is crossed.
-- Writes a training event.
-- Adds relevant tags to the technique's history.
-
-### `evolve_technique(proposal)`
-
-Checks:
-
-- Base technique exists and belongs to the player.
-- Base technique proficiency meets the evolution threshold.
-- References exist or are player-written text.
-- Every effect maps to a known primitive.
-- Budget is legal for tier, shrine path, and weirdness ceiling.
-- The technique does not duplicate an existing player ability.
-
-Effects:
-
-- Creates a new evolved technique or updates the existing technique branch.
-- Links references and relevant history events.
-- Writes a technique-evolved event.
-
-### `attempt_breakthrough(character_id, shrine_id, proposal)`
-
-Checks:
-
-- Character and shrine exist.
-- Character is at the shrine or otherwise has valid access.
-- Requirements are met.
-- Proposed effects fit the shrine and current progression tier.
-
-Effects:
-
-- Updates player path, level/rank, element, bonuses, vows, curses, or weirdness ceiling.
-- Writes a breakthrough event.
-- Adds shrine knowledge to future technique evolution context.
-
-## Turn-Based Combat Budget
-
-V0 combat is narrative turns, but technique mechanics should be compatible with a later turn-based visual system.
-
-| Tier | Budget | Example |
-|---|---:|---|
-| 1 | 3 points | Reposition plus dodge bonus |
-| 2 | 5 points | Guard plus stress heal |
-| 3 | 7 points | Mark plus fear pressure plus conditional damage |
-
-Primitive costs:
-
-| Primitive | Cost |
-|---|---:|
-| Minor damage, self reposition, reveal, dialogue unlock | 1 |
-| Guard, push, pull, mark, morale buff, stress heal, stress damage, dodge bonus | 2 |
-| Summon, terrain change, faction aura, reputation shift, multi-target status | 3 |
-
-Modifiers:
-
-- Cooldown reduces budget pressure only when it is meaningful in play.
-- Oath condition, positioning restriction, or escalation risk may discount 1 point.
-- Tier 1 techniques cannot affect factions or territory directly.
-- Weird effects require an appropriate shrine breakthrough or path state.
-
-## Pressure Scoring
-
-Story sifting remains LLM-assisted, but promotion uses a deterministic score so it is inspectable.
-
-| Signal | Points |
-|---|---:|
-| Repeated tag or actor cluster across 2+ events | 1 |
-| Named NPC involved | 1 |
-| Faction involved | 1 |
-| Site control, injury, resource, or reputation at risk | 2 |
-| Player has at least two plausible choices | 1 |
-| Rumor has reached a new area or wrong person | 1 |
-| Clock pressure exists within 1-2 days | 1 |
-
-Promotion thresholds:
-
-- 0-2: flavor or local color.
-- 3: rumor or background pressure.
-- 4-5: candidate scene.
-- 6+: quest thread.
-
-The LLM proposes the interpretation. The score determines whether the proposal can enter canonical quest state.
-
-## Starting-Region Happy Path
-
-This is the first replay scenario for testing.
-
-1. Player starts in a small authored hub.
-2. Player learns a basic technique from a manual, teacher, or relic.
-3. Player travels to a nearby pressured site.
-4. Player resolves a conflict in a way that creates witnesses and consequences.
-5. `write_event` records the action, witnesses, and visible outcomes.
-6. `spread_rumor` moves the story back to the hub.
-7. An NPC reacts publicly because they know the rumor, not because the player knows it.
-8. The story sifter promotes a rivalry or site thread based on pressure score.
-9. The player trains or uses the basic technique enough to increase proficiency.
-10. The player reaches a mastery threshold and evolves the technique using a chosen reference.
-11. The player visits a shrine and attempts a simple breakthrough.
-
-Passing criteria:
-
-- Every NPC reaction is backed by event knowledge or rumor knowledge.
-- Every scene references a reachable area or a message carrier.
-- The event log explains the whole story without hidden state.
-- Technique proficiency changes are traceable to use, practice, study, or training.
-- Technique evolution uses explicit references plus retrieved history.
-- Shrine breakthrough changes are recorded and influence later evolution validation.
-- A fresh index rebuild produces the same reachable facts.
-
-## Scenario Tests
-
-Minimum test suite:
-
-- `movement-adjacency`: invalid non-adjacent movement is rejected.
-- `knowledge-boundary`: an NPC cannot react to an unknown private event.
-- `rumor-propagation`: a rumor moves between areas through a carrier.
-- `quest-promotion`: pressure score 6 creates a quest thread.
-- `training-proficiency`: training/use increments a technique and promotes level at threshold.
-- `technique-evolution-budget`: an over-budget evolution proposal is rejected.
-- `shrine-breakthrough`: invalid shrine access or unmet requirements are rejected.
-- `event-replay`: rebuilding projections from `log.jsonl` reproduces area recent events, character knowledge, technique proficiency, and shrine path state.
+Generation must guarantee a reachable entrance, a traversable playable route,
+legal spawn zones, and a valid exit. Routine monster spawning is deterministic
+and respects population, terrain, distance, and cooldown constraints.
+
+The regeneration lifecycle remains an open design decision. The first slice
+may expose a debug option to reroll so alternatives can be evaluated.
+
+## Combat resolution
+
+Each turn follows a fixed sequence:
+
+1. Calculate legal actions.
+2. The active controller selects one.
+3. Validate target, range, cost, cooldown, and conditions.
+4. Apply effects in defined priority order.
+5. Resolve reactions and triggered modifiers.
+6. Update durations, resources, positions, and defeat state.
+7. Emit combat events.
+8. Advance to the next legal actor or end the encounter.
+
+The fallback enemy controller uses readable priorities or utility scores. An
+LLM battle controller receives only the legal-action set and returns one action
+plus optional intent text. A timeout or invalid selection immediately falls
+back without changing the battle seed.
+
+## Effects, techniques, and weapons
+
+Effects use a bounded vocabulary: damage, heal, move, guard, dodge, counter,
+apply status, remove status, mark, reveal, push, pull, summon, and terrain
+change. Elements and modifiers alter those effects through explicit ordering
+rules.
+
+A technique definition contains cost, targeting, range, cooldown, conditions,
+effects, proficiency, and history. A weapon contains category, material,
+quality, damage profile, affinities, modifier slots, upgrade budget, and
+history.
+
+Technique evolution and weapon reforging follow the same proposal flow:
+
+1. Player chooses an eligible base and references.
+2. Context builder retrieves relevant history.
+3. LLM or authored generator proposes several options.
+4. Validator compiles legal effects and rejects over-budget mechanics.
+5. Player selects an accepted option.
+6. Simulation records the new definition and event.
+
+No accepted proposal may depend on mechanics that exist only in prose.
+
+## Oracle adapters
+
+The first slice defines interfaces for four optional LLM lanes:
+
+| Lane | Input | Output | Fallback |
+|---|---|---|---|
+| Story Oracle | Local pressure, cast, memories, presentation limits | Scene proposal | Authored situation rule |
+| Character interaction | Character state, knowledge, conversation | Dialogue and intent | Authored line/choice |
+| Battle controller | Legal actions, visible battle state, intent | One legal action | Priority or utility AI |
+| Growth Oracle | Base item/technique, references, history, budget | Upgrade proposals | Authored upgrade set |
+
+Each adapter records model, prompt version, retrieved context IDs, response,
+validation result, latency, and cost.
+
+## First scenario
+
+1. Player enters the settlement and speaks with a named person.
+2. The person requests that the player carry information before a stated time.
+3. The player agrees, refuses, or leaves the matter unresolved.
+4. The player enters a generated Dungeon instead.
+5. A legal monster spawn leads to deterministic combat.
+6. Technique use produces proficiency history and loot includes a weapon or
+   crafting material.
+7. Time advances beyond the original request's useful window.
+8. The player returns and meets someone who has legally learned the outcome.
+9. An authored rule or Story Oracle stages the reaction through Director
+   commands.
+10. The player evolves a technique or reforges the weapon through a validated
+    proposal.
+
+## Verification
+
+- `command-validation`: illegal mutations fail without partial state changes.
+- `deterministic-replay`: the same snapshot, seed, and commands reproduce state
+  and events.
+- `director-parity`: console and external structured requests stage the same
+  supported cues.
+- `knowledge-boundary`: a person cannot react to an unknown private event.
+- `request-without-quest`: a request and commitment resolve without creating a
+  player-facing objective.
+- `clock-schedules`: time advancement executes eligible background actions once.
+- `dungeon-connectivity`: every accepted instance has a reachable route and exit.
+- `spawn-legality`: monsters respect budget, distance, and terrain rules.
+- `combat-fallback`: an invalid or timed-out LLM action uses deterministic AI.
+- `effect-order`: statuses and modifiers resolve in stable order.
+- `upgrade-budget`: illegal technique and weapon proposals are rejected.
+- `save-load`: a save restores canonical state, seeds, and event position.

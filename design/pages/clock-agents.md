@@ -1,52 +1,68 @@
-# Clock and Agents
+# Time and People
 
-The world moves in layers: coarse global events, regional pressure, town clocks, and rich local agents where the player is close enough to matter.
+Time advances through actions. Deterministic schedules and background rules
+keep the world moving; LLMs enter when a person's decision or expression is
+important enough to deserve interpretation.
 
-## Layered World Clock
+## World clock
 
-Simulation detail scales with proximity to the player. Distant events tick coarsely; the player's immediate area runs at full richness.
+Travel, rest, training, crafting, conversation, and exploration consume time.
+The clock drives schedules, delayed consequences, request urgency, Dungeon
+activity, shops, messages, and background actions.
 
-| Layer | Granularity | Examples |
+Simulation detail scales with proximity:
+
+| Layer | Resolution | Examples |
 |---|---|---|
-| Global | Low | Wars declared, dynasties fracture, major doctrine changes, distant city falls |
-| Regional | Medium | Refugees arrive, roads close, bandits expand, monster migration begins |
-| Town/city | Higher | Prices shift, guards crack down, rumors spread, local factions recruit |
-| Active local area | Rich | Named NPCs scheme, argue, move, confront, invite, betray, recruit |
+| Global | Coarse | War declared, dynasty fractured, distant city fell |
+| Regional | Periodic | Refugees arrived, road closed, Dungeon activity increased |
+| Settlement | Scheduled | Shop opened, patrol changed, rumor spread, person departed |
+| Active area | Immediate | Person walked, spoke, confronted, helped, or fought |
 
-Global and regional events create the pressure that drives local story. A distant war produces refugees; refugees create food pressure in Greyford; food pressure makes the mill dispute matter.
+The system need not simulate every distant footstep. It records consequential
+changes at the resolution appropriate to the player's distance.
 
-## Named NPC Agents
+## Named people
 
-Important named characters are active agents with goals, memory, relationships, plans, and the ability to act. Each NPC agent uses the character-sim pattern from the creative-writing-skills plugin — the LLM speaks in character from the NPC's knowledge, voice, and emotional state.
+Important people carry:
 
-| Agent | Story function |
-|---|---|
-| Mara, Guild Clerk | Quest broker, reputation witness, practical local memory |
-| Tomas, Rival Adventurer | Peer pressure, competition, humiliation, possible ally or enemy |
-| Sister Elian | Church pressure, healing, moral suspicion, institutional leverage |
-| Lord Vael | Local ruler, order, legitimacy, threat response |
-| Red Sash Captain | Bandit power, alternate recruitment path, anti-lordship pressure |
-| Mei the Exile | Early companion with her own agenda and loyalty arc |
+- goals and priorities;
+- current plans and schedules;
+- location and availability;
+- relationships and social posture;
+- witnessed events, received information, and personal memories;
+- requests, promises, debts, and grievances;
+- a voice and emotional state for interaction.
 
-Each agent follows the cycle: **goal → memory → relationship → plan → action → consequence**.
+Lightweight characters need only a role, location, routine, and a few facts.
+The story may promote one when events make them important.
 
-Characters who are not important enough for full agent treatment exist as lightweight state — a name, a role, and a few facts — until the story promotes them.
+## Deterministic and LLM behavior
 
-## Background Actions
+Deterministic rules handle ordinary behavior: go to work, return home, travel
+between known locations, use legal items, and execute an already chosen plan.
 
-Agents act during wait, travel, rest, and world ticks. Their actions produce events, not just atmosphere.
+An LLM may propose a new plan when goals conflict or circumstances become
+meaningful. It may choose to confront the player, recruit help, suppress a
+rumor, claim credit, or abandon a promise. The simulation validates the action
+and carries it out through ordinary commands.
 
-- Move to a new area.
-- Spread or suppress a rumor.
-- Invite or confront the player.
-- Recruit another NPC.
-- Claim credit for an outcome.
-- Shift faction resources or control.
+If no model is available, authored priorities and utility rules keep people
+moving.
 
-These actions feed back into the event log, creating new pressure that the story system can surface.
+## Background actions
 
-## Simulation Limits
+Background actions occur during travel, rest, and world ticks. They emit events
+because later reactions need evidence.
 
-> PoC target: 3-6 named agents in one county. A fully simulated continent is out of scope.
+Examples:
 
-Start with the minimum viable agent set. Add agents when the story needs them, not in advance.
+- A requester sends someone else after the player fails to return.
+- A rival enters the same Dungeon and claims a recovered weapon.
+- A healer moves supplies to the guards after losing trust in the player.
+- A faction closes a road and changes who can reach a settlement.
+
+## First-slice limit
+
+Start with four or five named people in one settlement. Their knowledge and
+movement must remain correct before the project attempts a simulated region.

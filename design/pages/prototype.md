@@ -1,86 +1,82 @@
-# Prototype
+# First Playable Slice
 
-The proof-of-concept is a meridian package with a small deterministic tool layer. It proves persistent, local, escalating story in a small sandbox. After 30-60 minutes of play, the player should be able to tell a specific story that only happened because of their choices.
+The first slice proves that Living RPG has a compelling stage before it asks an
+LLM to supply a full story. A human-authored script, deterministic driver, and
+LLM must all be able to perform scenes through the same Director contract.
 
-## Goal
+## Outcome
 
-The prototype is successful if the starting region feels like a place with memory: NPCs react to prior events, rumors move through the world, factions respond to the player's actions, techniques gain proficiency through use, and shrine breakthroughs can alter the player's path.
+After 20–30 minutes, a player should remember a person, a promise, a Dungeon
+expedition, and a change to their fighting style. The test is the quality and
+controllability of the experience, not the quantity of content.
 
-Do not anchor the prototype identity around a generic LLM-generated town name. Use placeholder names in tests if needed, but author the actual starting region deliberately.
+## What to build
 
-## What to Build
-
-The PoC is a meridian package containing:
-
-| Component | Description |
+| Part | First version |
 |---|---|
-| Game director agent | The main loop — reads world state, observes pressure, dispatches to other agents |
-| Narrator agent | Generates prose from world state and scene context |
-| Validator agent | Checks consistency — presence, knowledge, rules, causality |
-| NPC agents | One per named character, using the character-sim pattern |
-| World state files | The structured directory of prose and data files |
-| Tool definitions | `move_character`, `write_event`, `change_relationship`, `spread_rumor`, `claim_site`, `create_quest_thread`, `record_training`, `evolve_technique`, `attempt_breakthrough` |
-| Setup skill | Instructions for configuring local models as an alternative backend |
+| Presentation | Mobile-capable 2D/2.5D exploration, dialogue, portraits, camera cues, transitions, combat UI |
+| Director | Small command vocabulary usable from scripts, debug tools, and LLM adapters |
+| Place | One settlement exterior, one interior, one Dungeon entrance |
+| People | Player plus 4–5 named characters with schedules, knowledge, memories, and relationships |
+| Story | One request, one promise or refusal, one delayed consequence |
+| Dungeon | One seed-driven layout that can generate repeatedly and spawn visible monsters |
+| Combat | One deterministic turn-based encounter with interchangeable enemy controllers |
+| Growth | Several techniques, one mastery/evolution demonstration, one semi-deterministic weapon |
+| State | Commands, canonical events, save/load, and replay |
 
-The build contract for these files and tools lives in [V0 Implementation Spec](implementation-spec.md).
+## Play sequence
 
-## Vertical Slice
+1. The player walks through the settlement and meets a named person.
+2. That person asks for something in ordinary dialogue. No task card appears.
+3. The player may promise, refuse, or leave the request unresolved.
+4. The player enters a generated Dungeon and encounters a spawned monster.
+5. Combat resolves through deterministic rules and records technique use.
+6. The player returns after time has passed.
+7. The requester reacts only to facts they know.
+8. The player evolves a technique or reforges a weapon from legal primitives.
 
-| Element | First version |
-|---|---|
-| Map | Small authored starting region + 6-8 connected sites |
-| Characters | Player + 5 named agents + lightweight NPCs |
-| Factions | Local authority, church/shrine institution, guild/company, bandits/raiders, villagers/refugees |
-| Story threads | Site dispute, rival, shrine pressure, bandit recruitment, local legitimacy |
-| World clock | Daily regional tick, hourly local tick, wait/travel triggers |
-| Memory | Event log, area files, FTS + vector index |
-| Technique system | One learned technique, proficiency gain, one evolution opportunity |
-| Shrine system | One breakthrough site with a simple path upgrade |
+The first version may use authored situation selection and deterministic NPC
+responses. The LLM enters through the same interfaces once the scene works
+without it.
 
-## Player Interaction
+## Director proof
 
-The player interacts through natural language. Core actions:
+The debug console must be able to stage commands such as:
 
-- **look** — Describe the current area, exits, and present characters.
-- **move** — Travel to an adjacent area.
-- **talk** — Speak to a present character.
-- **wait** — Advance the clock and trigger background actions.
-- **inspect** — Examine something in detail.
-- **train** — Practice a known technique or study a manual.
-- **evolve** — At mastery, evolve a technique using chosen references.
-- **pray / breakthrough** — Use a shrine, statue, or altar for path-level progression.
-- **take job** — Accept a quest or task.
-
-Example session:
-
-```text
-Day 1, Hour 9 — Market Road
-
-Rain has turned the trade road into black mud. Refugees huddle beneath
-patched canvas while a shrine bell rings somewhere beyond the old wall.
-A guild clerk is arguing with a farmer over missing grain wagons.
-
-Exits: north Old Shrine · east Town Gate
-       west Mill Road · south River Crossing
-Present: Guild Clerk, Rival Adventurer, Old Farmer
-
-> inspect the shrine bell
+```ts
+focusCamera("mara")
+speak("mara", "You came back alone.", { expression: "guarded" })
+moveTo("tomas", "market_gate")
+face("tomas", "player")
+offerChoices(["Explain", "Apologize", "Leave"])
+beginEncounter("dungeon_entry")
 ```
 
-## Success Criteria
+The client owns pathfinding, timing, animation, and failure handling. The
+director states intent.
 
-1. The player always knows where they are and what exits/options exist.
-2. Generated scenes only use reachable locations, present characters, or propagated information.
-3. NPCs remember at least three prior player actions in later scenes.
-4. At least one quest thread can resolve in multiple factionally meaningful ways.
-5. At least one rumor spreads from a site back into the hub.
-6. The player can learn a technique and gain proficiency by using or training it.
-7. At mastery, the player can evolve a technique using a chosen reference and their history.
-8. The player can attempt one shrine breakthrough that changes their base path.
-9. Scenario tests can replay the happy path and rebuild derived state from the canonical event log.
+## Acceptance criteria
 
-## After the PoC
+1. The same scripted scene runs from the Director console and from a structured
+   external request.
+2. Movement, time, combat, inventory, and state mutation remain deterministic.
+3. Replaying the same command sequence with the same seed produces the same
+   canonical events and Dungeon result.
+4. Every NPC reaction is supported by witnessed events, received information,
+   or a recorded memory.
+5. Ignoring a request changes later behavior without displaying a quest failure.
+6. The Dungeon is navigable, contains legal spawns, and cannot trap the player.
+7. Enemy turns continue through deterministic AI when no LLM is available.
+8. Technique and weapon proposals compile only from legal effects and budgets.
+9. The slice remains usable at a mobile viewport and with touch controls.
+10. A developer can inspect state, events, memories, and LLM traces.
 
-If the story loop works, the next step is a visual client. The meridian package stays the same — a game client connects to the same agents and skills and renders the world visually.
+## Not required yet
 
-The current V1 direction is turn-based party combat, closer to Darkest Dungeon than an action RPG: readable positions, stress, wounds, status effects, marks, and named techniques.
+- A complete autonomous story Oracle.
+- A large overworld.
+- More than one Dungeon theme.
+- A full crafting economy.
+- Spirits or pet collection.
+- Procedural generation of every visual asset during play.
+- A final engine commitment before the presentation spike is evaluated.

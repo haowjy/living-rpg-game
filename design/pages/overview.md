@@ -1,67 +1,94 @@
 # Overview
 
-A living fantasy sandbox where story is the primary attractor: start as nobody in a volatile world, learn techniques, survive pressure, and make power your own.
+Living RPG is a story-driven fantasy RPG performed by a polished game client
+and directed at key moments by LLMs. It should feel like a game first: the
+player walks through a persistent world, talks to people, enters Dungeons,
+fights deterministic battles, and develops techniques and weapons. The Oracle
+decides which remembered pressures deserve a scene.
 
-## Primary Pitch
+## Player promise
 
-**Start as nobody. Learn forms. Survive the chaos. Change what your techniques become.**
+**Start unknown. Become someone people remember. Build techniques and weapons
+that carry the history of your run.**
 
-The game is a story-first sandbox set in a volatile fantasy age: petty kingdoms, warlords, churches, guilds, bandits, monsters, shrines, ruins, and desperate towns are all moving at once. The player rises faster than ordinary people because chaos creates opportunities — ruins to explore, factions to exploit, allies to recruit, villages to save, roads to control, and power vacuums to fill.
+The world remembers what the player did, who witnessed it, what people asked
+of them, and which promises they kept. Those facts return through dialogue,
+rumors, relationships, access, conflict, and opportunities. The result should
+feel authored without following a fixed campaign.
 
-The main sell is a world that remembers what the player does and uses that remembered history later: in NPC reactions, rumors, faction changes, technique evolutions, and shrine breakthroughs.
+## How the game works
 
-## Core Loop
+```text
+player, deterministic AI, or LLM
+                |
+                v
+        validated commands
+                |
+                v
+      deterministic simulation
+                |
+                v
+         canonical events
+                |
+                v
+       presentation and memory
+```
 
-1. **Survive** — Arrive weak in a dangerous region.
-2. **Explore** — Move through towns, roads, ruins, nests, shrines.
-3. **Learn** — Find manuals, teachers, enemy forms, relics, and techniques.
-4. **Practice** — Gain proficiency by using, drilling, or studying techniques.
-5. **Evolve** — At mastery thresholds, combine references and history into new technique branches.
-6. **Break through** — At shrines, upgrade the player's base path, element, bonuses, or weirdness ceiling.
-7. **Shape history** — The world records and reacts to the player's rise.
+- **Deterministic systems** own movement, time, schedules, inventory, legal
+  actions, battle resolution, spawning, and state mutation.
+- **LLMs** choose or write meaningful material: Oracle scenes, character
+  dialogue, optional battle decisions, story-thread interpretation, and upgrade
+  proposals.
+- **Presentation** turns commands and events into movement, animation, camera
+  work, portraits, dialogue, effects, sound, and mobile UI.
 
-The loop is self-directed. The player chooses goals, takes risks, and lives with consequences. The world provides pressure and opportunity; the player provides direction.
+Every LLM path needs a schema, validator, trace, and deterministic fallback.
 
-## Technique Mastery
+## Experience loop
 
-The technique system is not an automatic event-reward pipeline.
+1. **Move through the world.** Explore authored settlements and a persistent,
+   once-generated overworld.
+2. **Deal with people.** Hear requests, make promises, negotiate, refuse, help,
+   disappoint, and build a reputation.
+3. **Enter Dungeons.** Explore repeatedly generated monster spaces for danger,
+   materials, weapons, and techniques.
+4. **Fight.** Choose legal actions in deterministic turn-based battles against
+   enemies controlled by priority AI, utility AI, or an LLM battle controller.
+5. **Develop power.** Practice techniques, craft and reforge equipment, then
+   ask the Oracle to propose upgrades within mechanical budgets.
+6. **Return to consequences.** Time passes, people act, and the Oracle surfaces
+   the pressure created by what happened or was neglected.
 
-Events are context. Training is simple. Evolution is chosen.
+## Story without a quest log
 
-A player learns a form from a manual, teacher, enemy, relic, or shrine. Proficiency rises through use and practice. Once the technique is mastered enough, the player can evolve it by referencing another technique, a manual passage, a strange book, a shrine, a memory, or a line they write themselves. The LLM reads those references alongside the player's history and proposes new forms. Tools validate the mechanics.
+There are no task cards, objective counters, completion popups, or automatic
+failure messages. A person asks for something. The world records what was said,
+whether the player promised, and what later occurred. The requester may remember
+that the player helped, refused, or forgot.
 
-> Every run can produce techniques no other player found, because no other player used the same forms, survived the same pressures, chose the same references, or broke through at the same shrines.
+The Oracle may track requests and living story threads internally. Players
+experience them as relationships and situations rather than a list of chores.
 
-See [Growth & Power](#growth-power) for the full progression model.
+## First proof
 
-## Combat Direction
+The first playable slice is a small presentation sandbox containing:
 
-V0 uses narrative turn resolution: the player describes actions, and the system resolves outcomes against stats, skills, position, techniques, party state, enemy state, and scene pressure.
+- one attractive settlement area and interior;
+- four or five named people;
+- one request whose consequence can return later;
+- one repeatedly generated Dungeon;
+- one deterministic battle sequence with several techniques;
+- one technique evolution or weapon reforge proposed through a validated LLM
+  interface;
+- a Director console that can stage the same scene as an authored script or an
+  LLM.
 
-V1 should move toward visual turn-based party combat rather than real-time action. Darkest Dungeon is the closest reference: readable turns, party positions, stress, injuries, marks, status effects, named techniques, and tactical consequences.
+The slice succeeds when the presentation feels worth controlling and the world
+can remember a small event well enough to make its later consequence personal.
 
-The LLM adds meaning around combat — dialogue, morale, history references, consequences, and technique evolution — while deterministic rules own turn order, damage, status, target legality, and proficiency gain.
+## Scope boundaries
 
-## What "Building" Means
-
-The thing being built is the player themselves first: stats, skills, techniques, reputation, relationships, shrine path, and understanding of the world. Growth can then expand outward into party, faction, territory, and legitimacy.
-
-1. Helpless newcomer — weak stats, no reliable techniques, no reputation.
-2. Capable survivor — core skills improving, first learned forms becoming reliable.
-3. Known quantity — reputation spreading, NPCs react to the player's history.
-4. Specialist or generalist — deep technique mastery or broad skill coverage.
-5. Regional force — personal power and reputation reshape local events.
-
-Relationships are a growth channel, not a requirement. Players who want allies, factions, and political leverage can pursue them. Players who want to solo the world as a wandering swordsman can do that too.
-
-## Volatile Era
-
-The world is unstable by default. Think Three Kingdoms energy — medieval micro-states, border wars, opportunistic warlords, splintering institutions, and dangerous frontiers.
-
-Chaos is the opportunity engine that lets the player grow faster than everyone else. War creates power vacuums. Famine creates leverage. Monster pressure creates reputation. Institutional fracture creates narrative control.
-
-## PoC Scope
-
-The proof-of-concept is a meridian package — a set of agents and skills that run on open platforms. It proves map movement, location-scoped context, persistent event memory, world-clock pressure, named NPC agents, technique proficiency, technique evolution, shrine breakthroughs, and a story system that generates scenes from local pressure.
-
-See [Prototype Plan](#prototype) for the full PoC plan and success criteria.
+The first slice does not need a simulated continent, full economy, spirit
+collection, elaborate faction management, or a finished autonomous Oracle.
+TypeScript is the current preference, but the engine and framework remain open
+until the Director and presentation spike prove the right fit.

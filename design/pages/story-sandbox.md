@@ -1,58 +1,79 @@
 # Story Sandbox
 
-The player comes for story, but the story is not a fixed campaign — it is what happens when a rising protagonist collides with a volatile world. Every run should feel like it could only have happened to that player.
+The story is what happens when a rising protagonist enters other people's
+lives during a period of mounting instability. The game remembers enough of
+those collisions for later scenes to feel specific rather than generated.
 
-## Story Promise
+## Story promise
 
-The world has maps, factions, resources, and clocks, but those exist to produce meaningful situations: grudges, rescues, betrayals, desperate alliances, faction flips, rivalries, scandals, territorial claims, and remembered victories.
+People continue to want things when the player leaves. They ask for help, make
+plans, spread information, misread events, and remember whether the player was
+reliable. The Oracle surfaces the resulting pressure at moments when the game
+can perform it well.
 
-> A living fantasy sandbox where every action can become part of your legend.
+A good run produces a story the player can retell in terms of people and
+consequences:
 
-## Era Model
+```text
+The apothecary asked me to carry a warning before sundown.
+I promised, entered a Dungeon instead, and returned two days later.
+She had already sent someone else. He never came back.
+The next time I needed medicine, she served the injured guards first.
+```
 
-The world begins as a functioning medieval society — multiple kingdoms, trade routes, guilds, churches, local lords. The usual political tensions exist (border disputes, succession crises, guild rivalries) but things work. People farm, merchants trade, guards patrol.
+No objective tracker or failure message is needed. The relationship carries
+the consequence.
 
-Then it starts to break. Small wars erupt between kingdoms. Bandit groups grow bolder. Supply lines fracture. The normal pressures of medieval life sharpen into real instability — and the player arrives at this inflection point.
+## Volatile era
 
-| Pressure | What it creates | Player opportunity |
+The world begins as a functioning medieval society of kingdoms, trade routes,
+guilds, churches, local rulers, and dangerous frontiers. It then starts to
+fracture.
+
+| Pressure | What changes | What the player can do |
 |---|---|---|
-| Border wars | Broken roads, refugees, mercenaries, power vacuums | Protect, raid, recruit, betray, claim |
-| Famine | Mill disputes, hoarding, riots, smuggling | Control food, earn loyalty, blackmail elites |
-| Monster pressure | Abandoned sites, dangerous loot, desperate villages | Gain power and reputation faster than normal |
-| Institutional fracture | Church coverups, guild politics, noble legitimacy crises | Expose truth, become useful, seize narrative control |
+| Border war | Roads close, refugees move, soldiers desert | Protect, exploit, recruit, expose |
+| Scarcity | Prices rise, people hoard, institutions ration | Supply, steal, bargain, choose who receives help |
+| Dungeon activity | Monsters and materials appear in greater numbers | Explore, contain, profit, compete |
+| Institutional failure | Authorities lose trust and control | Support, reform, replace, or undermine them |
 
-## The Demon King
+These pressures create situations. They are not a queue of assigned missions.
 
-Behind the escalating chaos is a human-made existential threat — the Demon King. Not a stereotypical dark lord on a throne. More like a plague given will: a force that grows in power as the world destabilizes, feeding on the collapse the way disease feeds on famine.
+## People carry the story
 
-The Demon King scales alongside the player. As the player grows from nobody to legend, the Demon King grows from a distant rumor to an existential crisis. The player's personal arc and the world's deterioration arc mirror each other — the question is whether the player grows fast enough to face the threat when it arrives.
+Named characters have goals, memories, relationships, knowledge, and plans.
+Their behavior follows a simple cycle:
 
-The Demon King is human-made. The origin — who created it, why, whether it can be reversed — is a late-game discovery that recontextualizes the early game. The player spends the first act thinking the world is just politically unstable. The second act reveals something is accelerating the collapse on purpose.
-
-## Legend Path
-
-The player's arc moves through recognizable stages of personal power:
-
-1. **Nobody** — Weak stats, no skills, no reputation. The world ignores you.
-2. **Survivor** — Core combat and survival skills developing. You can handle common threats.
-3. **Specialist** — Deep technique tree or broad skill coverage. NPCs recognize your name.
-4. **Force** — Personal power reshapes local events. Factions court or fear you.
-5. **Legend** — History bends around you. Your techniques, choices, and reputation define an era.
-
-These stages emerge from play. The game does not gate progression — it recognizes the player's accumulated power and reflects it in how the world responds. Whether the player builds alliances or walks alone, the arc is about becoming someone the world cannot ignore.
-
-## Target Run Story
-
-A good run produces a retellable story, not a list of generated quests:
-
-```
-Day 1:  You arrive in Greyford with a rusted sword and no allies.
-Day 4:  You rescue the miller's son, but spare a bandit scout.
-Day 6:  A rival accuses you of weakening guild authority.
-Day 9:  The Church warns you that Lord Vael's men are asking questions.
-Day 13: Refugees start calling you the Mill-Savior.
-Day 18: The bandit scout returns with an offer — betray Vael,
-        and the Red Sashes will follow you.
+```text
+goal -> knowledge and memory -> plan -> action -> consequence
 ```
 
-Every beat in that sequence is caused by something the player did. The story is emergent, but it feels authored because it follows from local pressure and NPC memory.
+The player becomes important by changing that cycle. A rescued person, broken
+promise, public victory, private threat, or shared Dungeon expedition may alter
+what someone believes is possible.
+
+## Player arc
+
+The player begins unknown and becomes difficult for the world to ignore.
+Personal strength is only one channel. Techniques, weapons, reputation,
+relationships, resources, territory, and legitimacy can all change how people
+respond.
+
+The longer arc still points toward a civilization-scale threat: a human-made
+Demon King whose growth follows the world's collapse. Its origin and the cause
+of Dungeons should remain distant questions. The first slice only needs local
+people living under pressure.
+
+## Story quality test
+
+A generated scene earns its place when it:
+
+- follows from recorded events;
+- involves people who are present, reachable, or able to send word;
+- respects what each person knows;
+- changes a relationship, decision, resource, location, or future possibility;
+- leaves the player with a meaningful response;
+- can be staged clearly by the presentation.
+
+Atmosphere may remain atmosphere. The Oracle should not promote every detail
+into a plot.
