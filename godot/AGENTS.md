@@ -1,75 +1,41 @@
 # The Game (Godot Client)
 
-This directory is the game: a Godot 4.7 project containing the deterministic
-sim and its presentation. The LLM engine connects later through explicit
-contracts; nothing here may depend on it.
+A Godot 4.7 project holding the deterministic sim and its presentation. Nothing here
+may depend on the LLM engine. Contracts, architecture and rationale:
+[.context/CONTEXT.md](.context/CONTEXT.md). Boot and test commands, and the manual
+playtest checklist: [PLAYTEST.md](PLAYTEST.md).
 
-## Mental Model
+## Two layers, one boundary
 
-Two layers, one boundary:
+- **Sim** (`game/story/`, `game/combat/`, `game/shared/`, the defs in `game/data/`):
+  plain typed-GDScript `RefCounted` classes. No Node inheritance, no scene-tree
+  access, no `_process`. Owns all gameplay state and rules.
+- **Presentation** (scenes, `game/ui/`, `game/world/`, `game/actors/`): reads sim
+  state and dispatches typed commands. Never mutates state directly.
 
-- **Sim** (`game/story/`, `game/combat/`, `game/shared/`, `game/data/` defs):
-  plain typed-GDScript `RefCounted` classes. No Node inheritance, no
-  scene-tree access, no `_process`. Owns all gameplay state and rules.
-- **Presentation** (scenes, `game/ui/`, `game/world/`, `game/actors/`):
-  observes sim state and dispatches typed commands. Never mutates state
-  directly.
-
-The contract surface is **commands in, events out**: commands validate before
-executing and return `{ok, error}`; every change lands in the append-only
-event log. UI, tests, replays — and later the LLM — are all just drivers of
-the same surface. Details: [`.context/CONTEXT.md`](.context/CONTEXT.md).
-
-Presentation is free-form 2D with 2.5D staging: `Node2D`, `CharacterBody2D`,
-authored areas, y-sorted depth.
-
-## Structure
-
-```text
-game/app/          Entry scene, boot flow, top-level wiring
-game/world/        Area loading, exits, cameras
-game/actors/       Player, NPCs, enemies — presentation-side behavior
-game/interaction/  Interactables, prompts, dialogue triggers
-game/combat/       Battle sim: state, combatants, damage math
-game/story/        Sim of record: game state, event log, actor/spirit state
-game/ui/           HUD, dialogue, party, event log panels
-game/data/         Typed content defs + authored .tres under data/content/
-game/debug/        Debug overlay, state inspection
-game/shared/       Cross-domain sim primitives (seeded RNG service)
-tests/             Headless sim test suite (zero-dependency runner)
-assets/            Runtime assets committed with the project
-addons/godot_ai/   Editor MCP bridge — dev tooling only, never a runtime
-                   channel for the LLM engine
-```
+Commands validate before executing and return `{ok, error}`; every change lands in
+the append-only event log. UI, tests, replays and later the LLM all drive that one
+surface.
 
 ## Rules
 
-- **Determinism**: integer math in sim code (floats are presentation-only);
-  all sim randomness flows through the one seeded RNG service; no
-  `Time`/physics reads in sim code. Same seed + same commands must produce
-  an identical event log — a test enforces this.
-- Keep the headless suite green and extend it with every new sim rule
-  (commands: [`PLAYTEST.md`](PLAYTEST.md)).
+- **Determinism.** Integer math in sim code (floats are presentation-only); all sim
+  randomness goes through the seeded RNG service (`game/shared/rng_service.gd`); no
+  `Time` or physics reads in sim code. Same seed and same commands must produce an
+  identical event log; a test enforces it.
+- Extend the headless suite (`tests/`) with every new sim rule and run it before
+  committing.
 - Use typed GDScript. Commit editor-generated `.uid` files with their scripts.
-- Keep scripts close to the scenes/resources they serve. No global autoloads
-  or manager classes until a concrete need exists.
-- Do not bulk-edit scenes, resources, or assets without a focused task —
-  binary and scene churn is hard to review.
-- Keep branch-owned runtime assets in `assets/`; ignored `external_assets/`
-  is only for local shared asset libraries.
-- Keep the first screen playable. No landing page.
-
-## Anti-Patterns
-
-- Sim code reading the scene tree, wall clock, or unseeded randomness.
-- LLM-only gameplay paths.
-- Full 3D architecture before 2D/2.5D proves insufficient.
-- Separate quest/dialogue/combat managers that only forward calls.
-- Broad scene rewrites without opening and playtesting the project
-  (`PLAYTEST.md` is the manual checklist).
-
-## Read Next
-
-- [`.context/CONTEXT.md`](.context/CONTEXT.md) — contracts, architecture,
-  rationale.
-- [`PLAYTEST.md`](PLAYTEST.md) — boot/test commands and the manual checklist.
+- Keep scripts beside the scenes and resources they serve. No autoloads, and no
+  manager classes that only forward calls, until a concrete need exists; the one
+  autoload, `_mcp_game_helper`, belongs to the Godot AI addon.
+- `addons/godot_ai/` is editor tooling only, never a runtime channel for the LLM
+  engine.
+- Don't bulk-edit scenes, resources or assets without a focused task: binary and
+  scene churn is hard to review. Open and playtest the project after any scene
+  rewrite.
+- Branch-owned runtime assets go in `assets/`; the ignored `external_assets/` is
+  only for local shared asset libraries.
+- Presentation is 2D with 2.5D staging (`Node2D`, `CharacterBody2D`, y-sorted
+  depth); don't build 3D architecture before 2D proves insufficient.
+- The first screen is playable: no landing page.
